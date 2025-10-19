@@ -1,0 +1,85 @@
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+.env.backup
+.env.remote
+.env.remote.backup
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+**/publish-admin/
+*.log
+
+# Frontend build outputs (except those in backend/wwwroot for deployment)
+backend/**/wwwroot/
+!backend/OneID.Identity/wwwroot/.gitkeep
+!backend/OneID.AdminApi/wwwroot/.gitkeep
+
+# Frontend build outputs
+**/node_modules/
+**/dist/
+**/.vite/
+**/.next/
+**/.nuxt/
+**/.cache/
+
+# IDE and editor files
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test coverage
+coverage/
+*.coverage
+*.coveragexml
+
+# Package manager lock files (keep package-lock.json and pnpm-lock.yaml but ignore others)
+# yarn.lock
+
+# Serena and workflow specific
+.serena/
+.spec-workflow/session.json
+
+# Docker volumes data
+postgres_data/
+redis_data/
+
+# Certificates and keys
+*.pfx
+*.key
+*.pem
+*.crt
+*.cer
+*.p12
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib

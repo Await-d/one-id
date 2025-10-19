@@ -1,0 +1,282 @@
+# ============================================================
+# OneID 生产环境 HTTPS 部署配置
+# ============================================================
+# 
+# 📋 部署架构：
+#   - Identity Server (登录界面 + OIDC Provider)  -> https://domain:9443
+#   - Admin Portal (管理后台)                     -> https://domain:9444
+#   - PostgreSQL (数据库)
+#   - Redis (缓存)
+#   - Nginx (HTTPS反向代理)
+#
+# 🔐 HTTPS 配置：
+#   1. 生成SSL证书：
+#      cd nginx/ssl
+#      ./generate-cert.sh
+#   2. 或使用自己的证书，放置在 nginx/ssl/ 目录
+#
+# 🚀 快速开始：
+#   1. 创建 .env 文件并配置域名/IP
+#   2. docker compose -f docker-compose.https.yml up -d
+#
+# 📝 环境变量说明：
+#   DOMAIN           - 部署域名/IP (如: sso.company.com 或 192.168.123.9)
+#   POSTGRES_PASSWORD - 数据库密码
+#   ADMIN_USERNAME   - 管理员用户名
+#   ADMIN_PASSWORD   - 管理员密码
+#   ADMIN_EMAIL      - 管理员邮箱
+#
+# 🔧 高级配置（可选）：
+#   IDENTITY_PORT        - Identity Server HTTPS端口（默认: 9443）
+#   ADMIN_PORT           - Admin Portal HTTPS端口（默认: 9444）
+#   HTTP_PORT            - HTTP端口，自动重定向到HTTPS（默认: 9080）
+#   ADMIN_REDIRECT_URIS  - Admin Portal回调地址（多个用逗号分隔）
+#                          默认: https://${DOMAIN}:${ADMIN_PORT}/callback
+#                          示例: https://admin.company.com/callback,https://192.168.1.100:8443/callback
+#   ADMIN_LOGOUT_URIS    - Admin Portal登出回调地址（多个用逗号分隔）
+#                          默认: https://${DOMAIN}:${ADMIN_PORT}
+#                          示例: https://admin.company.com,https://192.168.1.100:8443
+#
+# ============================================================
+
+services:
+  # ============================================================
+  # PostgreSQL 数据库
+  # ============================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: oneid-postgres-prod
+    environment:
+      POSTGRES_USER: oneid
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oneid_prod_password_change_me}
+      POSTGRES_DB: oneid
+      # 性能优化配置
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - oneid-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oneid"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    # 资源限制（可选，根据实际情况调整）
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 2G
+    #     reservations:
+    #       memory: 512M
+
+  # ============================================================
+  # Redis 缓存
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: oneid-redis-prod
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - oneid-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  # ============================================================
+  # Identity Server (OIDC Provider + 优化后的登录 SPA)
+  # ============================================================
+  identity:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: oneid-identity:latest
+    container_name: oneid-identity
+    environment:
+      # ASP.NET Core 配置
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+      
+      # 数据库连接
+      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=oneid;Username=oneid;Password=${POSTGRES_PASSWORD:-oneid_prod_password_change_me}
+      - Persistence__Provider=Postgres
+      - Persistence__ConnectionName=Default
+      - Persistence__EnableSensitiveLogging=false  # 生产环境禁用敏感数据日志
+      
+      # 管理员账号配置
+      - Seed__Admin__Email=${ADMIN_EMAIL:-admin@oneid.local}
+      - Seed__Admin__UserName=${ADMIN_USERNAME:-admin}
+      - Seed__Admin__Password=${ADMIN_PASSWORD:-Admin@123456}
+      - Seed__Admin__DisplayName=${ADMIN_DISPLAY_NAME:-Platform Administrator}
+      - Seed__Admin__Role=PlatformAdmin
+      
+      # OIDC 客户端配置（登录 SPA）
+      # 重要：确保 DOMAIN 和端口环境变量设置正确
+      - Seed__Oidc__ClientId=spa.portal
+      - Seed__Oidc__DisplayName=OneID Portal
+      - Seed__Oidc__RedirectUri=https://${DOMAIN:-192.168.123.9}:${IDENTITY_PORT:-9443}/callback
+      - Seed__Oidc__PostLogoutRedirectUri=https://${DOMAIN:-192.168.123.9}:${IDENTITY_PORT:-9443}
+      - Seed__Oidc__Scopes__0=openid
+      - Seed__Oidc__Scopes__1=profile
+      - Seed__Oidc__Scopes__2=email
+      - Seed__Oidc__Scopes__3=offline_access
+      
+      # Redis 配置
+      - Redis__Configuration=redis:6379
+      
+      # CORS 配置 - 允许Admin Portal访问
+      # 重要：这个环境变量会在数据库初始化时设置 CORS 白名单
+      - IDENTITY_CORS_ALLOWED_ORIGINS=http://localhost:5173,https://${DOMAIN:-192.168.123.9}:${ADMIN_PORT:-9444},http://localhost:5102
+      
+      # Admin Portal OIDC 配置
+      # 配置Admin Portal的redirect_uri和logout_uri（支持自定义或多个地址，用逗号分隔）
+      # 如果设置了 ADMIN_REDIRECT_URIS 环境变量，则使用它；否则使用默认值
+      - ADMIN_REDIRECT_URIS=${ADMIN_REDIRECT_URIS:-https://${DOMAIN:-192.168.123.9}:${ADMIN_PORT:-9444}/callback}
+      - ADMIN_LOGOUT_URIS=${ADMIN_LOGOUT_URIS:-https://${DOMAIN:-192.168.123.9}:${ADMIN_PORT:-9444}}
+      
+      # Data Protection 配置 - 共享密钥目录
+      - DataProtection__ApplicationName=${DATAPROTECTION_APP_NAME:-OneID}
+      - DataProtection__KeysPath=/app/shared-keys
+      
+    volumes:
+      - dataprotection-keys:/app/shared-keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - oneid-network
+    restart: unless-stopped
+    # 健康检查 - 使用专用健康检查端点
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ============================================================
+  # Admin API + 优化后的管理后台 SPA
+  # ============================================================
+  adminapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.adminapi
+    image: oneid-adminapi:latest
+    container_name: oneid-adminapi
+    environment:
+      # ASP.NET Core 配置
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://0.0.0.0:80
+      
+      # 数据库连接
+      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=oneid;Username=oneid;Password=${POSTGRES_PASSWORD:-oneid_prod_password_change_me}
+      - Persistence__Provider=Postgres
+      - Persistence__ConnectionName=Default
+      - Persistence__EnableSensitiveLogging=false  # 生产环境禁用敏感数据日志
+      
+      # OIDC 认证配置
+      # Authority: 用于下载 JWKS（使用内部地址避免 SSL 证书问题）
+      - Identity__Authority=http://identity:80
+      # ExternalAuthority: JWT Token 的 Issuer（外部 HTTPS 地址）
+      - Identity__ExternalAuthority=https://${DOMAIN}:${IDENTITY_PORT}
+      - Identity__RequireHttpsMetadata=false
+      
+      # Redis 配置
+      - Redis__Configuration=redis:6379
+      
+      # CORS 配置（允许前端访问）
+      - Cors__AllowedOrigins__0=https://${DOMAIN:-192.168.123.9}:9444
+      
+      # Data Protection 配置 - 共享密钥目录
+      - DataProtection__ApplicationName=${DATAPROTECTION_APP_NAME:-OneID}
+      - DataProtection__KeysPath=/app/shared-keys
+      
+    volumes:
+      - dataprotection-keys:/app/shared-keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      identity:
+        condition: service_healthy
+    networks:
+      - oneid-network
+    restart: unless-stopped
+    # 健康检查 - 使用专用健康检查端点
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ============================================================
+  # Nginx 反向代理 (HTTPS)
+  # ============================================================
+  nginx:
+    image: nginx:alpine
+    container_name: oneid-nginx
+    ports:
+      - "${HTTP_PORT:-9080}:80"           # HTTP (自动重定向到 HTTPS)
+      - "${IDENTITY_PORT:-9443}:443"      # HTTPS - Identity Server (登录界面)
+      - "${ADMIN_PORT:-9444}:8443"        # HTTPS - Admin Portal (管理后台)
+    volumes:
+      # Nginx 配置文件
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # SSL 证书
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      # 日志（可选）
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      identity:
+        condition: service_healthy
+      adminapi:
+        condition: service_healthy
+    networks:
+      - oneid-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# ============================================================
+# 网络配置
+# ============================================================
+networks:
+  oneid-network:
+    driver: bridge
+    name: oneid-network
+
+# ============================================================
+# 数据卷配置
+# ============================================================
+volumes:
+  # PostgreSQL 数据持久化
+  postgres-data:
+    name: oneid-postgres-data
+    
+  # Redis 数据持久化
+  redis-data:
+    name: oneid-redis-data
+    
+  # Nginx 日志（可选）
+  nginx-logs:
+    name: oneid-nginx-logs
+    
+  # Data Protection 密钥共享卷（Identity + AdminAPI 共享）
+  dataprotection-keys:
+    name: oneid-dataprotection-keys

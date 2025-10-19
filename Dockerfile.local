@@ -1,0 +1,37 @@
+# 使用本地已构建前端的临时 Dockerfile（避免网络问题）
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS backend-build
+WORKDIR /src
+
+# 复制后端项目文件
+COPY backend/OneID.Identity/OneID.Identity.csproj ./OneID.Identity/
+COPY backend/OneID.Shared/OneID.Shared.csproj ./OneID.Shared/
+COPY backend/Directory.Packages.props ./
+COPY backend/OneID.sln ./
+
+# 还原后端依赖
+RUN dotnet restore OneID.Identity/OneID.Identity.csproj
+
+# 复制后端源代码
+COPY backend/ ./
+
+# 构建后端
+RUN dotnet publish OneID.Identity/OneID.Identity.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
+
+# 运行时阶段
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+EXPOSE 80
+
+# 复制后端文件
+COPY --from=backend-build /app/publish .
+
+# 复制本地已构建的前端文件
+COPY frontend/login/dist ./wwwroot/
+COPY frontend/admin/dist ./wwwroot/admin/
+
+ENTRYPOINT ["dotnet", "OneID.Identity.dll"]
+

@@ -1,0 +1,22 @@
+bin/
+obj/
+.git/
+node_modules/
+*.user
+*.suo
+.vscode/
+.idea/
+**/bin/
+**/obj/
+**/node_modules/
+*.swp
+*.swn
+*.swo
+*.swm
+# 排除开发环境配置文件
+.env
+.env.development
+.env.local
+**/.env
+**/.env.development
+**/.env.local

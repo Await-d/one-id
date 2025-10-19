@@ -1,0 +1,74 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!-- Microsoft Core -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="9.0.0" />
+    
+    <!-- Database Providers -->
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
+    <PackageVersion Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+    
+    <!-- Database Additional -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    
+    <!-- OpenIddict -->
+    <PackageVersion Include="OpenIddict.AspNetCore" Version="5.8.0" />
+    <PackageVersion Include="OpenIddict.EntityFrameworkCore" Version="5.8.0" />
+    <PackageVersion Include="OpenIddict.Abstractions" Version="5.8.0" />
+    <PackageVersion Include="OpenIddict.Server.AspNetCore" Version="5.8.0" />
+    <PackageVersion Include="OpenIddict.Validation.AspNetCore" Version="5.8.0" />
+    <PackageVersion Include="OpenIddict.Validation.ServerIntegration" Version="5.8.0" />
+    
+    <!-- Authentication -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.0" />
+    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.0.0" />
+    <PackageVersion Include="AspNet.Security.OAuth.Gitee" Version="9.0.0" />
+    <PackageVersion Include="AspNet.Security.OAuth.Weixin" Version="9.0.0" />
+    <PackageVersion Include="AspNet.Security.OAuth.Apple" Version="9.0.0" />
+    <PackageVersion Include="AspNet.Security.OAuth.LinkedIn" Version="9.0.0" />
+    <PackageVersion Include="AspNet.Security.OAuth.QQ" Version="9.0.0" />
+    
+    <!-- Email -->
+    <PackageVersion Include="SendGrid" Version="9.29.3" />
+    <PackageVersion Include="MailKit" Version="4.8.0" />
+    <PackageVersion Include="MimeKit" Version="4.8.0" />
+    
+    <!-- MFA & Security -->
+    <PackageVersion Include="Otp.NET" Version="1.4.0" />
+    <PackageVersion Include="QRCoder" Version="1.6.0" />
+    
+    <!-- Testing -->
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+    <PackageVersion Include="xunit" Version="2.9.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+    
+    <!-- Utilities -->
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.2" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.4" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageVersion Include="CsvHelper" Version="33.0.1" />
+    <PackageVersion Include="UAParser" Version="3.1.47" />
+  </ItemGroup>
+</Project>
+

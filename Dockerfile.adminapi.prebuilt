@@ -1,0 +1,14 @@
+# 使用预编译文件的 AdminAPI Dockerfile（无需网络）
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+
+# 安装 curl 用于健康检查
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+EXPOSE 80
+
+# 复制预编译的后端文件
+COPY backend/publish/adminapi/ .
+
+ENTRYPOINT ["dotnet", "OneID.AdminApi.dll"]
+

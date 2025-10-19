@@ -1,0 +1,33 @@
+# AdminAPI 使用本地已构建前端的临时 Dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS backend-build
+WORKDIR /src
+
+# 复制后端项目文件
+COPY backend/OneID.AdminApi/OneID.AdminApi.csproj ./OneID.AdminApi/
+COPY backend/OneID.Shared/OneID.Shared.csproj ./OneID.Shared/
+COPY backend/Directory.Packages.props ./
+COPY backend/OneID.sln ./
+
+# 还原后端依赖
+RUN dotnet restore OneID.AdminApi/OneID.AdminApi.csproj
+
+# 复制后端源代码
+COPY backend/ ./
+
+# 构建后端
+RUN dotnet publish OneID.AdminApi/OneID.AdminApi.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
+
+# 运行时阶段
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+EXPOSE 80
+
+# 复制后端文件
+COPY --from=backend-build /app/publish .
+
+ENTRYPOINT ["dotnet", "OneID.AdminApi.dll"]
+

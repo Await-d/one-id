@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Authentication Errors -->
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>用户名或密码错误。</value>
+  </data>
+  <data name="AccountLocked" xml:space="preserve">
+    <value>由于多次登录失败，此账户已被锁定。</value>
+  </data>
+  <data name="EmailNotConfirmed" xml:space="preserve">
+    <value>请在登录前验证您的邮箱地址。</value>
+  </data>
+  <data name="MfaRequired" xml:space="preserve">
+    <value>需要双因素认证。</value>
+  </data>
+  <data name="InvalidMfaCode" xml:space="preserve">
+    <value>验证码无效。</value>
+  </data>
+  <data name="InvalidRecoveryCode" xml:space="preserve">
+    <value>恢复码无效。</value>
+  </data>
+  
+  <!-- Registration Errors -->
+  <data name="UsernameExists" xml:space="preserve">
+    <value>用户名已存在。</value>
+  </data>
+  <data name="EmailExists" xml:space="preserve">
+    <value>邮箱地址已被使用。</value>
+  </data>
+  <data name="WeakPassword" xml:space="preserve">
+    <value>密码必须至少8个字符，并包含小写字母和数字。</value>
+  </data>
+  
+  <!-- Password Reset Errors -->
+  <data name="InvalidResetToken" xml:space="preserve">
+    <value>密码重置链接无效或已过期。</value>
+  </data>
+  <data name="PasswordResetFailed" xml:space="preserve">
+    <value>重置密码失败，请重试。</value>
+  </data>
+  
+  <!-- Email Errors -->
+  <data name="EmailSendFailed" xml:space="preserve">
+    <value>发送邮件失败，请稍后重试。</value>
+  </data>
+  <data name="InvalidEmailConfiguration" xml:space="preserve">
+    <value>邮件配置无效或未设置。</value>
+  </data>
+  
+  <!-- Validation Errors -->
+  <data name="RequiredField" xml:space="preserve">
+    <value>{0} 是必填项。</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>请输入有效的邮箱地址。</value>
+  </data>
+  <data name="MinLength" xml:space="preserve">
+    <value>{0} 至少需要 {1} 个字符。</value>
+  </data>
+  <data name="MaxLength" xml:space="preserve">
+    <value>{0} 不能超过 {1} 个字符。</value>
+  </data>
+  
+  <!-- Authorization Errors -->
+  <data name="Unauthorized" xml:space="preserve">
+    <value>您无权执行此操作。</value>
+  </data>
+  <data name="Forbidden" xml:space="preserve">
+    <value>您没有权限访问此资源。</value>
+  </data>
+  
+  <!-- Resource Errors -->
+  <data name="NotFound" xml:space="preserve">
+    <value>请求的资源未找到。</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>用户未找到。</value>
+  </data>
+  <data name="ClientNotFound" xml:space="preserve">
+    <value>客户端未找到。</value>
+  </data>
+  <data name="RoleNotFound" xml:space="preserve">
+    <value>角色未找到。</value>
+  </data>
+  
+  <!-- General Errors -->
+  <data name="InternalServerError" xml:space="preserve">
+    <value>发生内部服务器错误，请稍后重试。</value>
+  </data>
+  <data name="ValidationFailed" xml:space="preserve">
+    <value>验证失败，请检查您的输入。</value>
+  </data>
+  
+  <!-- Success Messages -->
+  <data name="RegistrationSuccess" xml:space="preserve">
+    <value>注册成功！请检查您的邮箱以验证账户。</value>
+  </data>
+  <data name="PasswordResetEmailSent" xml:space="preserve">
+    <value>如果该邮箱存在，您将收到密码重置链接。</value>
+  </data>
+  <data name="PasswordChanged" xml:space="preserve">
+    <value>您的密码已成功修改。</value>
+  </data>
+  <data name="EmailConfirmed" xml:space="preserve">
+    <value>您的邮箱已成功验证。</value>
+  </data>
+</root>
+
