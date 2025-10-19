@@ -17,6 +17,7 @@ using OneID.Shared.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
+// OneID - 企业级统一身份认证平台 v0.1.0
 Console.WriteLine("=============== STARTING ONEID IDENTITY SERVER ===============");
 Console.Out.Flush();
 
