@@ -210,9 +210,15 @@ app.MapFallback(async context =>
     // 只处理非API路径
     if (!context.Request.Path.StartsWithSegments("/api"))
     {
-        var filePath = Path.Combine(app.Environment.WebRootPath, "index.html");
-        context.Response.ContentType = "text/html";
-        await context.Response.SendFileAsync(filePath);
+        // AdminApi 不提供前端页面,返回提示信息
+        context.Response.StatusCode = 404;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = "Not Found",
+            message = "AdminApi does not serve frontend pages. Please use the Identity Server at port 5101 for the web interface.",
+            api_docs = "/swagger"
+        });
     }
     else
     {
