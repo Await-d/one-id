@@ -2,9 +2,9 @@
 
 <div align="center">
 
-![OneID Logo](docs/images/logo.png)
-
 **现代化、安全、可扩展的身份认证与授权平台**
+
+基于 OIDC/OAuth 2.1 标准 | 单容器部署 | 开箱即用
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
