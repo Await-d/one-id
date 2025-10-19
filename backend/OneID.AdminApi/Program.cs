@@ -203,31 +203,29 @@ app.MapControllers()
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
     .AllowAnonymous();
 
-// SPA fallback - 任何未匹配路由的请求都返回index.html
-// 必须放在所有Map之后
+// API 服务提示 - AdminApi 是纯后端 API 服务
+// 前端页面(Admin Portal)由 Identity 服务提供在 /admin 路径
 app.MapFallback(async context =>
 {
     // 只处理非API路径
     if (!context.Request.Path.StartsWithSegments("/api"))
     {
-        // AdminApi 没有前端页面，返回提示信息
-        if (string.IsNullOrEmpty(app.Environment.WebRootPath) ||
-            !File.Exists(Path.Combine(app.Environment.WebRootPath, "index.html")))
+        // AdminApi 是纯 API 服务,前端页面在 Identity 服务的 /admin 路径
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
         {
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(new
+            service = "OneID Admin API",
+            message = "This is a backend API service. Frontend is available at Identity service /admin path.",
+            endpoints = new
             {
-                message = "OneID Admin API",
                 swagger = "/swagger",
-                status = "running"
-            });
-        }
-        else
-        {
-            var filePath = Path.Combine(app.Environment.WebRootPath, "index.html");
-            context.Response.ContentType = "text/html";
-            await context.Response.SendFileAsync(filePath);
-        }
+                health = "/health",
+                users = "/api/users",
+                clients = "/api/clients",
+                roles = "/api/roles"
+            },
+            status = "running"
+        });
     }
     else
     {
