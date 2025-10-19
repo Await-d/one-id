@@ -203,22 +203,31 @@ app.MapControllers()
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }))
     .AllowAnonymous();
 
-// SPA fallback - 任何未匹配路由的请求都返回index.html  
+// SPA fallback - 任何未匹配路由的请求都返回index.html
 // 必须放在所有Map之后
 app.MapFallback(async context =>
 {
     // 只处理非API路径
     if (!context.Request.Path.StartsWithSegments("/api"))
     {
-        // AdminApi 不提供前端页面,返回提示信息
-        context.Response.StatusCode = 404;
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new
+        // AdminApi 没有前端页面，返回提示信息
+        if (string.IsNullOrEmpty(app.Environment.WebRootPath) ||
+            !File.Exists(Path.Combine(app.Environment.WebRootPath, "index.html")))
         {
-            error = "Not Found",
-            message = "AdminApi does not serve frontend pages. Please use the Identity Server at port 5101 for the web interface.",
-            api_docs = "/swagger"
-        });
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new
+            {
+                message = "OneID Admin API",
+                swagger = "/swagger",
+                status = "running"
+            });
+        }
+        else
+        {
+            var filePath = Path.Combine(app.Environment.WebRootPath, "index.html");
+            context.Response.ContentType = "text/html";
+            await context.Response.SendFileAsync(filePath);
+        }
     }
     else
     {

@@ -16,7 +16,15 @@ public static class ServiceProviderExtensions
 
         // 运行数据库迁移
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await dbContext.Database.MigrateAsync(cancellationToken);
+        try
+        {
+            await dbContext.Database.MigrateAsync(cancellationToken);
+        }
+        catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07")
+        {
+            // 表已存在，跳过迁移错误
+            Console.WriteLine($"⚠️ 数据库表已存在，跳过迁移: {ex.MessageText}");
+        }
 
         // 运行数据库种子
         var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
