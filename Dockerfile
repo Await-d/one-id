@@ -105,10 +105,8 @@ RUN chmod +x /app/start.sh
 # 暴露端口
 EXPOSE 80
 
-# 设置环境变量
+# 设置默认环境变量（可通过 docker run -e 覆盖）
 ENV ASPNETCORE_ENVIRONMENT=Production \
-    ASPNETCORE_URLS_IDENTITY=http://+:5101 \
-    ASPNETCORE_URLS_ADMIN=http://+:5102 \
     ConnectionStrings__Default="Host=postgres;Port=5432;Database=oneid;Username=oneid;Password=oneid_password" \
     Persistence__Provider=Postgres
 
