@@ -1,0 +1,55 @@
+# git-cliff 配置文件
+# 文档: https://git-cliff.org/docs/configuration
+
+[changelog]
+# changelog 头部
+header = """
+# 更新日志\n
+所有重要的变更都会记录在这个文件中。\n
+"""
+# changelog 主体模板
+body = """
+{% if version %}\
+    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [未发布]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.breaking %}[**破坏性变更**] {% endif %}{{ commit.message | upper_first }}\
+    {% endfor %}
+{% endfor %}\n
+"""
+# changelog 尾部
+footer = """
+<!-- 由 git-cliff 自动生成 -->
+"""
+
+[git]
+# 解析提交的配置
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+commit_preprocessors = [
+    { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/Await-d/one-id/issues/${2}))" },
+]
+commit_parsers = [
+    { message = "^feat", group = "新功能" },
+    { message = "^fix", group = "Bug 修复" },
+    { message = "^doc", group = "文档" },
+    { message = "^perf", group = "性能" },
+    { message = "^refactor", group = "重构" },
+    { message = "^style", group = "样式" },
+    { message = "^test", group = "测试" },
+    { message = "^chore\\(release\\): prepare for", skip = true },
+    { message = "^chore", group = "杂项" },
+    { body = ".*security", group = "安全" },
+]
+protect_breaking_commits = false
+filter_commits = false
+tag_pattern = "v[0-9]*"
+skip_tags = "v0.1.0-beta.1"
+ignore_tags = ""
+topo_order = false
+sort_commits = "oldest"
