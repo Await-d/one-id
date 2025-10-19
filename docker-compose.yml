@@ -74,6 +74,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+      - ./shared-keys:/app/shared-keys
     ports:
       - "80:5101"      # Identity Server (主入口)
       - "5102:5102"    # Admin API
