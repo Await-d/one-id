@@ -38,8 +38,14 @@ jobs:
             exit 0
           fi
 
+          # 检查是否有 HEAD~1（避免在初始提交时失败）
+          if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           # 检查是否有代码变更（排除文档和配置文件）
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(cs|tsx?|json|csproj|sln|sql|resx)$' || true)
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E '\.(cs|tsx?|json|csproj|sln|sql|resx)$' || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "should_release=false" >> $GITHUB_OUTPUT
@@ -143,11 +149,16 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: git-cliff
+        continue-on-error: true
 
       - name: Generate Changelog
         id: changelog
         run: |
-          git-cliff --latest --strip header > RELEASE_NOTES.md || echo "## 更新内容\n\n- 版本更新至 ${{ steps.new_version.outputs.new_version }}" > RELEASE_NOTES.md
+          if command -v git-cliff &> /dev/null; then
+            git-cliff --latest --strip header > RELEASE_NOTES.md 2>/dev/null || echo -e "## 更新内容\n\n- 版本更新至 ${{ steps.new_version.outputs.new_version }}" > RELEASE_NOTES.md
+          else
+            echo -e "## 更新内容\n\n- 版本更新至 ${{ steps.new_version.outputs.new_version }}" > RELEASE_NOTES.md
+          fi
           cat RELEASE_NOTES.md
 
       - name: Create Git Tag
