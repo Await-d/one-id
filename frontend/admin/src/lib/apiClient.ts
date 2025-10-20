@@ -30,9 +30,9 @@ const getApiBaseUrl = (): string => {
         return `${currentUrl.protocol}//${currentUrl.hostname}:10231`;
     }
 
-    // 如果通过域名访问（如 https://auth.awitk.cn），需要通过反向代理
-    // 这种情况下，假设 Admin API 也在同一个域名下
-    return window.location.origin;
+    // 如果通过域名访问（如 https://auth.awitk.cn），使用 Nginx 反向代理路径
+    // Admin API 通过 /admin/api 路径访问
+    return `${window.location.origin}/admin/api`;
 };
 
 export const API_BASE_URL = getApiBaseUrl();
