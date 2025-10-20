@@ -32,10 +32,10 @@ docker run -d \
   -e Seed__Oidc__ClientId=spa.portal \
   -e Seed__Oidc__ClientSecret=await29_secret_oneid_foralawery \
   -e Seed__Oidc__RedirectUri=https://auth.awitk.cn/callback \
-  -e LOGIN_REDIRECT_URIS="http://localhost:10230/callback" \
-  -e LOGIN_LOGOUT_URIS="http://localhost:10230" \
-  -e ADMIN_REDIRECT_URIS="http://localhost:10230/admin/callback,https://auth.awitk.cn/admin/callback" \
-  -e ADMIN_LOGOUT_URIS="http://localhost:10230/admin,https://auth.awitk.cn/admin" \
+  -e LOGIN_REDIRECT_URIS="https://auth.awitk.cn/callback" \
+  -e LOGIN_LOGOUT_URIS="https://auth.awitk.cn" \
+  -e ADMIN_REDIRECT_URIS="https://auth.awitk.cn/admin/callback" \
+  -e ADMIN_LOGOUT_URIS="https://auth.awitk.cn/admin" \
   await2719/oneid:latest
 
 echo ""
