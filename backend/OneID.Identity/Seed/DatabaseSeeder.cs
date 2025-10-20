@@ -137,8 +137,36 @@ public sealed class DatabaseSeeder(
             ConsentType = OpenIddictConstants.ConsentTypes.Explicit
         };
 
-        descriptor.RedirectUris.Add(new Uri(_options.Oidc.RedirectUri));
-        descriptor.PostLogoutRedirectUris.Add(new Uri(_options.Oidc.PostLogoutRedirectUri));
+        // Redirect URIs - 支持从环境变量添加额外的地址
+        var redirectUris = new List<string> { _options.Oidc.RedirectUri };
+
+        // 从环境变量读取额外的redirect_uri（支持多个，用逗号分隔）
+        var envRedirectUris = Environment.GetEnvironmentVariable("LOGIN_REDIRECT_URIS");
+        if (!string.IsNullOrWhiteSpace(envRedirectUris))
+        {
+            var uris = envRedirectUris.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            redirectUris.AddRange(uris);
+        }
+
+        foreach (var uri in redirectUris)
+        {
+            descriptor.RedirectUris.Add(new Uri(uri));
+        }
+
+        // Post Logout Redirect URIs - 支持从环境变量添加额外的地址
+        var postLogoutUris = new List<string> { _options.Oidc.PostLogoutRedirectUri };
+
+        var envPostLogoutUris = Environment.GetEnvironmentVariable("LOGIN_LOGOUT_URIS");
+        if (!string.IsNullOrWhiteSpace(envPostLogoutUris))
+        {
+            var uris = envPostLogoutUris.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            postLogoutUris.AddRange(uris);
+        }
+
+        foreach (var uri in postLogoutUris)
+        {
+            descriptor.PostLogoutRedirectUris.Add(new Uri(uri));
+        }
 
         foreach (var scope in _options.Oidc.Scopes)
         {

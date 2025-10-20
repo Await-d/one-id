@@ -41,9 +41,9 @@ const authority = getAuthority();
 // Client ID
 const clientId = import.meta.env.VITE_OIDC_CLIENT_ID ?? "spa.admin";
 
-// Redirect URIs
-const redirectUri = import.meta.env.VITE_OIDC_REDIRECT_URI ?? `${window.location.origin}/callback`;
-const postLogoutRedirectUri = import.meta.env.VITE_OIDC_LOGOUT_REDIRECT_URI ?? `${window.location.origin}/logout-callback`;
+// Redirect URIs - 直接使用运行时值
+const redirectUri = import.meta.env.VITE_OIDC_REDIRECT_URI || `${window.location.origin}/admin/callback`;
+const postLogoutRedirectUri = import.meta.env.VITE_OIDC_LOGOUT_REDIRECT_URI || `${window.location.origin}/admin/logout-callback`;
 
 // Scopes
 const scope = import.meta.env.VITE_OIDC_SCOPE ?? "openid profile email offline_access admin_api";

@@ -6,6 +6,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    base: '/admin/', // 设置基础路径,因为前端会被部署到 /admin 路径
     server: {
       port: Number(env.VITE_PORT ?? 5174),
       host: true,

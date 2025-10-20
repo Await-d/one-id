@@ -102,6 +102,10 @@ builder.Services.AddAuthentication(options =>
                 "http://identity:80/",
                 "http://localhost:5101",
                 "http://localhost:5101/",
+                "http://localhost:10230",  // 对外暴露的端口
+                "http://localhost:10230/",
+                "https://auth.awitk.cn",    // 生产域名
+                "https://auth.awitk.cn/",
                 builder.Configuration["Identity:Authority"]?.TrimEnd('/'),
                 builder.Configuration["Identity:Authority"]?.TrimEnd('/') + "/",
                 builder.Configuration["Identity:ExternalAuthority"]?.TrimEnd('/'),
@@ -129,17 +133,47 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+// 添加 CORS 服务
+builder.Services.AddCors();
+
 builder.Services.AddAuthorization(options =>
 {
     // 添加 admin_api scope 验证策略
     options.AddPolicy("AdminApiScope", policy =>
     {
         policy.RequireAuthenticatedUser();
-        // 检查 scope claim 中是否包含 admin_api（scope 是空格分隔的字符串）
+        // 检查 scope claim 中是否包含 admin_api
+        // OpenIddict 可能将 scope 存储为单个字符串或多个独立 claim
         policy.RequireAssertion(context =>
         {
+            var logger = context.Resource as HttpContext;
+            
+            // 方式1: 检查单个 scope claim（空格分隔）
             var scopeClaim = context.User.FindFirst("scope")?.Value;
-            return scopeClaim != null && scopeClaim.Split(' ').Contains("admin_api");
+            if (scopeClaim != null)
+            {
+                logger?.RequestServices.GetRequiredService<ILogger<Program>>()
+                    .LogInformation("Scope claim (single): {Scope}", scopeClaim);
+                if (scopeClaim.Split(' ').Contains("admin_api"))
+                    return true;
+            }
+            
+            // 方式2: 检查多个 scope claims
+            var scopeClaims = context.User.FindAll("scope").Select(c => c.Value).ToList();
+            if (scopeClaims.Any())
+            {
+                logger?.RequestServices.GetRequiredService<ILogger<Program>>()
+                    .LogInformation("Scope claims (multiple): {Scopes}", string.Join(", ", scopeClaims));
+                if (scopeClaims.Contains("admin_api"))
+                    return true;
+            }
+            
+            // 记录所有 claims 用于调试
+            var allClaims = context.User.Claims.Select(c => $"{c.Type}={c.Value}");
+            logger?.RequestServices.GetRequiredService<ILogger<Program>>()
+                .LogWarning("Authorization failed. All claims: {Claims}", string.Join("; ", allClaims));
+            
+            return false;
         });
     });
     
@@ -185,12 +219,26 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// 静态文件服务（用于前端Admin Portal）  
+// 静态文件服务（用于前端Admin Portal）
 var options = new DefaultFilesOptions();
 options.DefaultFileNames.Clear();
 options.DefaultFileNames.Add("index.html");
 app.UseDefaultFiles(options);
 app.UseStaticFiles();
+
+// CORS 配置 - 允许 Admin Portal 跨域访问
+app.UseCors(policy =>
+{
+    // 开发环境：允许 localhost 的任何端口
+    policy.WithOrigins(
+            "http://localhost:10230",
+            "http://localhost:5101",
+            "https://auth.awitk.cn"
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+});
 
 app.UseRouting();
 app.UseAuthentication();

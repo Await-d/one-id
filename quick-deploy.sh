@@ -35,10 +35,12 @@ log_warning() {
 # 配置检查
 # ============================================================
 
-log_info "OneID 一键部署脚本"
+log_info "OneID 快速部署脚本"
 echo ""
-echo "目标服务器: 192.168.123.5:2719"
-echo "部署目录: /volume1/docker/1panel/apps/local/one-id"
+echo "此脚本将："
+echo "  1. 构建最新的 Docker 镜像"
+echo "  2. 停止并删除旧容器"
+echo "  3. 启动新容器"
 echo ""
 read -p "确认开始部署？(y/N) " -n 1 -r
 echo
@@ -48,97 +50,67 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 # ============================================================
-# 步骤 1: 准备远程环境配置文件
+# 步骤 1: 本地构建 Docker 镜像
 # ============================================================
 
-log_info "步骤 1/4: 准备远程环境配置..."
+log_info "步骤 1/3: 本地构建 Docker 镜像..."
 
-if [ ! -f ".env.remote" ]; then
-    log_error "未找到 .env.remote 文件，请先创建此文件"
-    exit 1
-fi
-
-# 临时复制 .env.remote 为 .env（用于传输）
-cp .env.remote .env.remote.backup
-log_success "环境配置准备完成"
-
-# ============================================================
-# 步骤 2: 执行主部署脚本
-# ============================================================
-
-log_info "步骤 2/4: 开始传输文件和部署..."
-
-./deploy-remote.sh
+docker build -t await2719/oneid:latest .
 
 if [ $? -ne 0 ]; then
-    log_error "部署失败"
+    log_error "Docker 镜像构建失败"
     exit 1
 fi
 
-log_success "部署脚本执行完成"
+log_success "Docker 镜像构建完成"
 
 # ============================================================
-# 步骤 3: 更新远程服务器的 .env 文件
+# 步骤 2: 停止并删除旧容器
 # ============================================================
 
-log_info "步骤 3/4: 更新远程服务器的环境配置..."
+log_info "步骤 2/3: 停止旧容器..."
 
-REMOTE_HOST="192.168.123.5"
-REMOTE_PORT="2719"
-REMOTE_USER="await"
-REMOTE_PASSWORD="ZhangDong2580"
-REMOTE_DEPLOY_DIR="/volume1/docker/1panel/apps/local/one-id"
+docker stop oneid-app 2>/dev/null || true
+docker rm oneid-app 2>/dev/null || true
 
-# 上传 .env.remote 作为远程服务器的 .env
-sshpass -p "$REMOTE_PASSWORD" scp -P "$REMOTE_PORT" -o StrictHostKeyChecking=no \
-    .env.remote "$REMOTE_USER@$REMOTE_HOST:$REMOTE_DEPLOY_DIR/.env"
-
-log_success "环境配置已更新"
+log_success "旧容器已清理"
 
 # ============================================================
-# 步骤 4: 检查 SSL 证书
+# 步骤 3: 启动新容器
 # ============================================================
 
-log_info "步骤 4/4: 检查 SSL 证书..."
+log_info "步骤 3/3: 启动新容器..."
 
-# 检查远程服务器是否有 SSL 证书
-HAS_CERT=$(sshpass -p "$REMOTE_PASSWORD" ssh -p "$REMOTE_PORT" -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" \
-    "[ -f $REMOTE_DEPLOY_DIR/nginx/ssl/cert.pem ] && echo 'yes' || echo 'no'")
+docker run -d \
+  --name oneid-app \
+  --restart unless-stopped \
+  --network 1panel-network \
+  -p 10230:5101 \
+  -p 10231:5102 \
+  -v /volume1/docker/1panel/apps/local/one-id/data:/app/data \
+  -v /volume1/docker/1panel/apps/local/one-id/logs:/app/logs \
+  -v /volume1/docker/1panel/apps/local/one-id/shared-keys:/app/shared-keys \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  -e TZ=Asia/Shanghai \
+  -e ASPNETCORE_FORWARDEDHEADERS_ENABLED=true \
+  -e ASPNETCORE_URLS="http://+:5101" \
+  -e ConnectionStrings__Default="Host=1Panel-postgresql-WSXy;Port=5432;Database=oneid;Username=oneid;Password=H2GiCAJpST7ji7k3" \
+  -e Persistence__Provider=Postgres \
+  -e Redis__ConnectionString="1Panel-redis-2Awp:6379,password=bdtdhc6DizYQYbEZ" \
+  -e Seed__Admin__Username=await \
+  -e Seed__Admin__Password=Await2580 \
+  -e Seed__Admin__Email=285283010@qq.com \
+  -e Seed__Oidc__ClientId=spa.portal \
+  -e Seed__Oidc__ClientSecret=await29_secret_oneid_foralawery \
+  -e Seed__Oidc__RedirectUri=https://auth.awitk.cn/callback \
+  await2719/oneid:latest
 
-if [ "$HAS_CERT" == "no" ]; then
-    log_warning "未找到 SSL 证书，正在生成自签名证书..."
-
-    # 在远程服务器上生成自签名证书
-    sshpass -p "$REMOTE_PASSWORD" ssh -p "$REMOTE_PORT" -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" << 'CERT_GEN'
-cd /volume1/docker/1panel/apps/local/one-id
-mkdir -p nginx/ssl
-cd nginx/ssl
-
-# 生成自签名证书
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout key.pem -out cert.pem \
-    -subj "/C=CN/ST=State/L=City/O=Organization/CN=192.168.123.5"
-
-chmod 644 cert.pem key.pem
-
-echo "SSL 证书已生成"
-CERT_GEN
-
-    log_success "SSL 证书已生成（自签名，有效期 365 天）"
-else
-    log_success "SSL 证书已存在"
+if [ $? -ne 0 ]; then
+    log_error "容器启动失败"
+    exit 1
 fi
 
-# ============================================================
-# 步骤 5: 重启服务以应用配置
-# ============================================================
-
-log_info "重启服务以应用新配置..."
-
-sshpass -p "$REMOTE_PASSWORD" ssh -p "$REMOTE_PORT" -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" \
-    "cd $REMOTE_DEPLOY_DIR && docker compose -f docker-compose.https.yml restart"
-
-log_success "服务已重启"
+log_success "新容器已启动"
 
 # ============================================================
 # 完成
@@ -146,27 +118,22 @@ log_success "服务已重启"
 
 echo ""
 echo "============================================================"
-log_success "OneID 部署完成！"
+log_success "OneID 快速部署完成！"
 echo "============================================================"
 echo ""
+echo "容器状态："
+docker ps --filter name=oneid-app --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+echo ""
+echo "查看日志："
+echo "  docker logs -f oneid-app"
+echo ""
+echo "测试端点："
+echo "  curl http://localhost:10230/.well-known/openid-configuration"
+echo "  curl http://localhost:10230/health"
+echo ""
 echo "访问地址："
-echo "  Identity Server: https://192.168.123.5:9443"
-echo "  Admin Portal:    https://192.168.123.5:9444"
+echo "  Identity Server: https://auth.awitk.cn"
+echo "  Admin Portal:    https://auth.awitk.cn/admin"
 echo ""
-echo "管理员账号："
-echo "  用户名: admin"
-echo "  密码:   Admin@123456 (请尽快修改)"
-echo "  邮箱:   285283010@qq.com"
-echo ""
-echo "管理工具："
-echo "  运行 ./remote-manage.sh 可以管理远程服务"
-echo "  - 查看日志"
-echo "  - 重启服务"
-echo "  - 查看状态"
-echo ""
-echo "注意事项："
-echo "  1. 首次访问 HTTPS 时会提示证书不受信任（自签名证书）"
-echo "  2. 点击「高级」→「继续访问」即可"
-echo "  3. 生产环境建议替换为真实的 SSL 证书"
-echo ""
+echo "============================================================"
 echo "============================================================"

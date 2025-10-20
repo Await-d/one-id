@@ -256,11 +256,19 @@ public class AuthorizationController(
             identity.SetClaim(Claims.EmailVerified, user.EmailConfirmed);
         }
 
-        identity.SetDestinations(static claim => claim.Type switch
+        // 添加用户角色到 access token
+        var roles = await userManager.GetRolesAsync(user);
+        foreach (var role in roles)
+        {
+            identity.AddClaim(new Claim(Claims.Role, role));
+        }
+
+        identity.SetDestinations(claim => claim.Type switch
         {
             Claims.Subject or Claims.Name => [Destinations.AccessToken, Destinations.IdentityToken],
             Claims.Email or Claims.EmailVerified or Claims.PreferredUsername
                 => [Destinations.IdentityToken],
+            Claims.Role => [Destinations.AccessToken], // 角色声明只放入 access token
             _ => [Destinations.AccessToken]
         });
 

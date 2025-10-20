@@ -110,21 +110,17 @@ Console.Out.Flush();
 Console.WriteLine("=============== ADDING SERVICES ===============");
 Console.Out.Flush();
 
+builder.Services.AddHttpClient(); // 添加 HttpClient 支持 (WebhookService 等服务需要)
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICorsSettingsProvider, CorsSettingsProvider>();
-builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IMfaService, MfaService>();
 builder.Services.AddEmailService();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
-builder.Services.AddScoped<IUserBehaviorAnalyticsService, UserBehaviorAnalyticsService>();
-builder.Services.AddScoped<IAnomalyDetectionService, AnomalyDetectionService>();
-builder.Services.AddScoped<IUserDeviceService, UserDeviceService>();
-builder.Services.AddScoped<ISigningKeyService, SigningKeyService>();
-builder.Services.AddScoped<ISecurityRuleService, SecurityRuleService>();
-builder.Services.AddScoped<ITenantService, TenantService>();
-builder.Services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
-builder.Services.AddScoped<ISystemSettingsService, SystemSettingsService>();
 builder.Services.AddLocalizationService(); // 添加国际化服务
+
+// 注册OneID基础设施服务（包含 IAuditLogService, INotificationService 等）
+builder.Services.AddOneIdInfrastructure();
+
 builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.SectionName));
 builder.Services.Configure<ExternalAuthOptions>(builder.Configuration.GetSection(ExternalAuthOptions.SectionName));
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
@@ -250,11 +246,10 @@ builder.Services.AddOpenIddict()
         options.AddDevelopmentEncryptionCertificate();
         options.AddDevelopmentSigningCertificate();
 
-        // 仅开发环境：允许HTTP（不安全，生产环境必须移除）
-        if (builder.Environment.IsDevelopment())
-        {
-            options.SetIssuer(new Uri("http://localhost:5101/"));
-        }
+        // 设置固定的 issuer，避免根据请求 Host 动态变化
+        // 这样确保 Admin API 可以正确验证 token
+        var issuer = builder.Configuration["OpenIddict:Issuer"] ?? "http://localhost:5101/";
+        options.SetIssuer(new Uri(issuer));
 
         options.UseAspNetCore()
             .EnableAuthorizationEndpointPassthrough()
@@ -341,8 +336,18 @@ app.UseRateLimiter();
 app.UseCustomRequestLocalization(); // 添加请求本地化中间件
 
 // 静态文件服务（用于前端SPA）
+// 1. 根路径的默认文件和静态文件
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// 2. /admin 路径的静态文件配置
+var adminFileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+    Path.Combine(app.Environment.WebRootPath ?? Directory.GetCurrentDirectory(), "admin"));
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = adminFileProvider,
+    RequestPath = "/admin"
+});
 
 app.UseRouting();
 app.UseAuthentication();
@@ -350,7 +355,15 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// SPA fallback - 所有未匹配的请求返回index.html
+// Admin Portal SPA fallback - /admin 路径下的非文件请求返回 index.html 内容
+app.MapFallback("/admin/{**path}", async context =>
+{
+    var indexPath = Path.Combine(app.Environment.WebRootPath ?? Directory.GetCurrentDirectory(), "admin", "index.html");
+    context.Response.ContentType = "text/html";
+    await context.Response.SendFileAsync(indexPath);
+});
+
+// Login SPA fallback - 根路径的其他未匹配请求返回 index.html
 app.MapFallbackToFile("index.html");
 
 await app.RunAsync();

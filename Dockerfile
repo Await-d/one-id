@@ -66,7 +66,7 @@ COPY frontend/admin/ ./
 
 # 创建生产环境配置
 RUN echo "VITE_OIDC_AUTHORITY=" > .env.production && \
-    echo "VITE_OIDC_CLIENT_ID=admin.portal" >> .env.production && \
+    echo "VITE_OIDC_CLIENT_ID=spa.admin" >> .env.production && \
     echo "VITE_OIDC_REDIRECT_URI=" >> .env.production && \
     echo "VITE_OIDC_POST_LOGOUT_REDIRECT_URI=" >> .env.production && \
     echo "VITE_ADMIN_API_URL=" >> .env.production

@@ -8,7 +8,7 @@ import { userManager } from "./oidcConfig";
 
 // 获取API基础URL
 // 开发环境：使用localhost:5102
-// 生产环境：使用当前域名（前端和后端同源部署）
+// 生产环境：智能检测 Admin API 地址
 const getApiBaseUrl = (): string => {
     const envApiUrl = import.meta.env.VITE_API_URL;
 
@@ -22,7 +22,16 @@ const getApiBaseUrl = (): string => {
         return "http://localhost:5102";
     }
 
-    // 生产环境使用当前域名（前后端同源）
+    // 生产环境智能检测
+    const currentUrl = new URL(window.location.origin);
+
+    // 如果当前是 10230 端口（Identity Server），Admin API 在 10231 端口
+    if (currentUrl.port === "10230") {
+        return `${currentUrl.protocol}//${currentUrl.hostname}:10231`;
+    }
+
+    // 如果通过域名访问（如 https://auth.awitk.cn），需要通过反向代理
+    // 这种情况下，假设 Admin API 也在同一个域名下
     return window.location.origin;
 };
 

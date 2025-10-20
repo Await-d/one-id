@@ -148,4 +148,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+], {
+  basename: '/admin', // 设置基础路径,因为应用部署在 /admin 路径下
+});

@@ -15,7 +15,7 @@ public sealed class AdminSeedOptions
     public string UserName { get; init; } = "admin";
     public string Password { get; init; } = "ChangeMe123!";
     public string DisplayName { get; init; } = "Platform Admin";
-    public string Role { get; init; } = "PlatformAdmin";
+    public string Role { get; init; } = "Admin";
 }
 
 public sealed class OidcSeedOptions
