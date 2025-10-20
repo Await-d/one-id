@@ -94,8 +94,8 @@ docker run -d \
   --name $CONTAINER_NAME \
   --restart unless-stopped \
   --network $NETWORK_NAME \
-  -p 10230:5101 \
-  -p 10231:5102 \
+  -p 127.0.0.1:10230:5101 \
+  -p 127.0.0.1:10231:5102 \
   -e TZ=Asia/Shanghai \
   -e ASPNETCORE_FORWARDEDHEADERS_ENABLED=true \
   -e ASPNETCORE_URLS="http://+:5101" \

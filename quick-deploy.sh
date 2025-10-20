@@ -85,8 +85,8 @@ docker run -d \
   --name oneid-app \
   --restart unless-stopped \
   --network 1panel-network \
-  -p 10230:5101 \
-  -p 10231:5102 \
+  -p 127.0.0.1:10230:5101 \
+  -p 127.0.0.1:10231:5102 \
   -v /volume1/docker/1panel/apps/local/one-id/data:/app/data \
   -v /volume1/docker/1panel/apps/local/one-id/logs:/app/logs \
   -v /volume1/docker/1panel/apps/local/one-id/shared-keys:/app/shared-keys \
