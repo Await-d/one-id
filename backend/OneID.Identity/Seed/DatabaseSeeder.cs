@@ -150,7 +150,14 @@ public sealed class DatabaseSeeder(
 
         foreach (var uri in redirectUris)
         {
-            descriptor.RedirectUris.Add(new Uri(uri));
+            if (!string.IsNullOrWhiteSpace(uri) && Uri.TryCreate(uri, UriKind.Absolute, out var validUri))
+            {
+                descriptor.RedirectUris.Add(validUri);
+            }
+            else
+            {
+                logger.LogWarning("Skipping invalid redirect URI: '{Uri}'", uri);
+            }
         }
 
         // Post Logout Redirect URIs - 支持从环境变量添加额外的地址
@@ -165,7 +172,14 @@ public sealed class DatabaseSeeder(
 
         foreach (var uri in postLogoutUris)
         {
-            descriptor.PostLogoutRedirectUris.Add(new Uri(uri));
+            if (!string.IsNullOrWhiteSpace(uri) && Uri.TryCreate(uri, UriKind.Absolute, out var validUri))
+            {
+                descriptor.PostLogoutRedirectUris.Add(validUri);
+            }
+            else
+            {
+                logger.LogWarning("Skipping invalid post-logout redirect URI: '{Uri}'", uri);
+            }
         }
 
         foreach (var scope in _options.Oidc.Scopes)
@@ -223,7 +237,14 @@ public sealed class DatabaseSeeder(
         
         foreach (var uri in redirectUris)
         {
-            descriptor.RedirectUris.Add(new Uri(uri));
+            if (!string.IsNullOrWhiteSpace(uri) && Uri.TryCreate(uri, UriKind.Absolute, out var validUri))
+            {
+                descriptor.RedirectUris.Add(validUri);
+            }
+            else
+            {
+                logger.LogWarning("Skipping invalid redirect URI: '{Uri}'", uri);
+            }
         }
 
         // Post Logout Redirect URIs - 从环境变量读取
@@ -253,7 +274,14 @@ public sealed class DatabaseSeeder(
         
         foreach (var uri in postLogoutUris)
         {
-            descriptor.PostLogoutRedirectUris.Add(new Uri(uri));
+            if (!string.IsNullOrWhiteSpace(uri) && Uri.TryCreate(uri, UriKind.Absolute, out var validUri))
+            {
+                descriptor.PostLogoutRedirectUris.Add(validUri);
+            }
+            else
+            {
+                logger.LogWarning("Skipping invalid post-logout redirect URI: '{Uri}'", uri);
+            }
         }
 
         // Scopes - 包含admin_api scope用于Admin API访问
