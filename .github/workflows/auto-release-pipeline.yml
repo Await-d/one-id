@@ -9,6 +9,7 @@ on:
       - 'frontend/**'
       - 'Dockerfile*'
       - 'docker-compose*.yml'
+      - '*.sh'
       - '.github/workflows/auto-release-pipeline.yml'
 
 env:
@@ -44,8 +45,8 @@ jobs:
             exit 0
           fi
 
-          # 检查是否有代码变更（排除文档和配置文件）
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E '\.(cs|tsx?|json|csproj|sln|sql|resx)$' || true)
+          # 检查是否有代码变更（排除纯文档变更）
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E '\.(cs|tsx?|json|csproj|sln|sql|resx|sh|yml|yaml)$' || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "should_release=false" >> $GITHUB_OUTPUT
