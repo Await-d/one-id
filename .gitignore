@@ -70,6 +70,10 @@ coverage/
 postgres_data/
 redis_data/
 
+# Test environment files and keys
+test-shared-keys/
+docker-compose.test.yml
+
 # Certificates and keys
 *.pfx
 *.key

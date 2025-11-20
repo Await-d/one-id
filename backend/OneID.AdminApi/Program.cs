@@ -226,19 +226,22 @@ options.DefaultFileNames.Add("index.html");
 app.UseDefaultFiles(options);
 app.UseStaticFiles();
 
-// CORS 配置 - 允许 Admin Portal 跨域访问
-app.UseCors(policy =>
+// CORS 配置 - 仅在开发环境启用
+// 生产环境通过 Nginx 反向代理实现同域访问，不需要 CORS
+if (app.Environment.IsDevelopment())
 {
-    // 开发环境：允许 localhost 的任何端口
-    policy.WithOrigins(
-            "http://localhost:10230",
-            "http://localhost:5101",
-            "https://auth.awitk.cn"
-        )
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowCredentials();
-});
+    app.UseCors(policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:5101",  // Identity Server (开发)
+                "http://localhost:5173",  // Vite dev server
+                "http://localhost:18080"  // 本地测试环境
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+}
 
 app.UseRouting();
 app.UseAuthentication();
