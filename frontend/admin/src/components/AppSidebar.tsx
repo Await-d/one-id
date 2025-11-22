@@ -17,6 +17,8 @@ import {
     DashboardOutlined,
     LockOutlined,
     BellOutlined,
+    ThunderboltOutlined,
+    ToolOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -178,22 +180,28 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
                     onClick: () => navigate("/login-policies"),
                 },
                 {
-                    key: "/client-validation",
-                    icon: <SecurityScanOutlined />,
-                    label: t("menu.clientValidation"),
-                    onClick: () => navigate("/client-validation"),
+                    key: "/system-config",
+                    icon: <SettingOutlined />,
+                    label: t("menu.systemConfig"),
+                    onClick: () => navigate("/system-config"),
                 },
                 {
-                    key: "/cors-settings",
-                    icon: <SecurityScanOutlined />,
-                    label: t("menu.corsSettings"),
-                    onClick: () => navigate("/cors-settings"),
+                    key: "/rate-limit-settings",
+                    icon: <ThunderboltOutlined />,
+                    label: t("rateLimitSettings.title"),
+                    onClick: () => navigate("/rate-limit-settings"),
                 },
                 {
                     key: "/system-settings",
                     icon: <SettingOutlined />,
                     label: t("menu.systemSettings"),
                     onClick: () => navigate("/system-settings"),
+                },
+                {
+                    key: "/configuration",
+                    icon: <ToolOutlined />,
+                    label: t("configuration.title"),
+                    onClick: () => navigate("/configuration"),
                 },
             ],
         },

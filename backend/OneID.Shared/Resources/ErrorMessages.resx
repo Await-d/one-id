@@ -163,5 +163,25 @@
   <data name="EmailConfirmed" xml:space="preserve">
     <value>Your email has been confirmed successfully.</value>
   </data>
+  
+  <!-- OAuth Scope Descriptions -->
+  <data name="Scope_OpenId" xml:space="preserve">
+    <value>Access your basic profile information</value>
+  </data>
+  <data name="Scope_Profile" xml:space="preserve">
+    <value>Access your full profile information (name, photo, etc.)</value>
+  </data>
+  <data name="Scope_Email" xml:space="preserve">
+    <value>Access your email address</value>
+  </data>
+  <data name="Scope_OfflineAccess" xml:space="preserve">
+    <value>Maintain access when you're not present</value>
+  </data>
+  <data name="Scope_AdminApi" xml:space="preserve">
+    <value>Access administrative API</value>
+  </data>
+  <data name="Scope_Default" xml:space="preserve">
+    <value>Access {0}</value>
+  </data>
 </root>
 

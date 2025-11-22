@@ -7,7 +7,6 @@ namespace OneID.AdminApi.Controllers;
 /// <summary>
 /// 分析统计控制器
 /// </summary>
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class AnalyticsController : ControllerBase

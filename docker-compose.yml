@@ -43,6 +43,9 @@ services:
 
   # OneID 应用 (Identity + AdminApi)
   oneid:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: await2719/oneid:latest
     container_name: oneid-app
     restart: unless-stopped
@@ -76,8 +79,8 @@ services:
       - ./logs:/app/logs
       - ./shared-keys:/app/shared-keys
     ports:
-      - "80:5101"      # Identity Server (主入口)
-      - "5102:5102"    # Admin API
+      - "8088:5101"    # Identity Server (主入口)
+      - "8089:5102"    # Admin API
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5101/health"]
       interval: 30s

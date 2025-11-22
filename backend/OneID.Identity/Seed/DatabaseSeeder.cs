@@ -10,6 +10,7 @@ using OpenIddict.Abstractions;
 using OneID.Identity.Configuration;
 using OneID.Shared.Data;
 using OneID.Shared.Domain;
+using OneID.Shared.Infrastructure;
 
 namespace OneID.Identity.Seed;
 
@@ -69,6 +70,8 @@ public sealed class DatabaseSeeder(
         await EnsureAdminPortalClientAsync(cancellationToken);
         await EnsureOidcScopeAsync(cancellationToken);
         await EnsureExternalAuthProvidersAsync(cancellationToken);
+        await EnsureSystemSettingsAsync(cancellationToken);
+        await EnsureRateLimitSettingsAsync(cancellationToken);
     }
 
     private async Task EnsureAdminRoleAsync(CancellationToken cancellationToken)
@@ -396,6 +399,13 @@ public sealed class DatabaseSeeder(
             }
             else
             {
+                // 如果已被修改且不强制更新，跳过
+                if (existing.IsModified && !_options.ForceUpdate)
+                {
+                    logger.LogDebug("Skip updating external auth provider {Name} because it was modified via Admin Portal", name);
+                    continue;
+                }
+
                 var updated = false;
 
                 if (!string.IsNullOrWhiteSpace(provider.DisplayName) && existing.DisplayName != displayName)
@@ -459,5 +469,136 @@ public sealed class DatabaseSeeder(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task EnsureSystemSettingsAsync(CancellationToken cancellationToken)
+    {
+        var set = dbContext.Set<SystemSetting>();
+        var existingSettings = await set.ToDictionaryAsync(s => s.Key, cancellationToken);
+
+        // 使用 SystemSettingsService 的静态方法获取默认设置
+        var defaultSettings = SystemSettingsService.GetDefaultSettings();
+        var now = DateTime.UtcNow;
+        var createdCount = 0;
+        var updatedCount = 0;
+        var skippedCount = 0;
+
+        foreach (var defaultSetting in defaultSettings)
+        {
+            if (existingSettings.TryGetValue(defaultSetting.Key, out var existing))
+            {
+                // 记录已存在，检查是否需要更新
+                if (existing.IsModified && !_options.ForceUpdate)
+                {
+                    // 已被修改且不强制更新，跳过
+                    skippedCount++;
+                    continue;
+                }
+
+                // 检查值是否不同
+                if (existing.Value != defaultSetting.Value ||
+                    existing.DisplayName != defaultSetting.DisplayName ||
+                    existing.Description != defaultSetting.Description ||
+                    existing.DefaultValue != defaultSetting.DefaultValue)
+                {
+                    existing.Value = defaultSetting.Value;
+                    existing.DisplayName = defaultSetting.DisplayName;
+                    existing.Description = defaultSetting.Description;
+                    existing.DefaultValue = defaultSetting.DefaultValue;
+                    existing.UpdatedAt = now;
+                    // 不设置 IsModified = true，因为这是 Seed 更新
+                    updatedCount++;
+                }
+            }
+            else
+            {
+                // 记录不存在，创建新记录
+                defaultSetting.CreatedAt = now;
+                defaultSetting.UpdatedAt = now;
+                defaultSetting.IsModified = false;
+                set.Add(defaultSetting);
+                createdCount++;
+            }
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (createdCount > 0 || updatedCount > 0)
+        {
+            logger.LogInformation("SystemSettings: Created {Created}, Updated {Updated}, Skipped {Skipped} (modified)",
+                createdCount, updatedCount, skippedCount);
+        }
+        else
+        {
+            logger.LogInformation("SystemSettings: No changes needed ({Total} settings, {Skipped} skipped as modified)",
+                existingSettings.Count, skippedCount);
+        }
+    }
+
+    private async Task EnsureRateLimitSettingsAsync(CancellationToken cancellationToken)
+    {
+        var set = dbContext.Set<RateLimitSetting>();
+        var existingSettings = await set.ToDictionaryAsync(s => s.LimiterName, cancellationToken);
+
+        var defaultSettings = RateLimitSettingsService.GetDefaultSettings();
+        var now = DateTime.UtcNow;
+        var createdCount = 0;
+        var updatedCount = 0;
+        var skippedCount = 0;
+
+        foreach (var defaultSetting in defaultSettings)
+        {
+            if (existingSettings.TryGetValue(defaultSetting.LimiterName, out var existing))
+            {
+                // 记录已存在，检查是否需要更新
+                if (existing.IsModified && !_options.ForceUpdate)
+                {
+                    // 已被修改且不强制更新，跳过
+                    skippedCount++;
+                    continue;
+                }
+
+                // 检查值是否不同
+                if (existing.PermitLimit != defaultSetting.PermitLimit ||
+                    existing.WindowSeconds != defaultSetting.WindowSeconds ||
+                    existing.QueueLimit != defaultSetting.QueueLimit ||
+                    existing.Enabled != defaultSetting.Enabled ||
+                    existing.DisplayName != defaultSetting.DisplayName ||
+                    existing.Description != defaultSetting.Description)
+                {
+                    existing.PermitLimit = defaultSetting.PermitLimit;
+                    existing.WindowSeconds = defaultSetting.WindowSeconds;
+                    existing.QueueLimit = defaultSetting.QueueLimit;
+                    existing.Enabled = defaultSetting.Enabled;
+                    existing.DisplayName = defaultSetting.DisplayName;
+                    existing.Description = defaultSetting.Description;
+                    existing.UpdatedAt = now;
+                    // 不设置 IsModified = true，因为这是 Seed 更新
+                    updatedCount++;
+                }
+            }
+            else
+            {
+                // 记录不存在，创建新记录
+                defaultSetting.CreatedAt = now;
+                defaultSetting.UpdatedAt = now;
+                defaultSetting.IsModified = false;
+                set.Add(defaultSetting);
+                createdCount++;
+            }
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (createdCount > 0 || updatedCount > 0)
+        {
+            logger.LogInformation("RateLimitSettings: Created {Created}, Updated {Updated}, Skipped {Skipped} (modified)",
+                createdCount, updatedCount, skippedCount);
+        }
+        else
+        {
+            logger.LogInformation("RateLimitSettings: No changes needed ({Total} settings, {Skipped} skipped as modified)",
+                existingSettings.Count, skippedCount);
+        }
     }
 }

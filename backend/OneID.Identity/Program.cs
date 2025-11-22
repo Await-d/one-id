@@ -14,6 +14,7 @@ using OneID.Identity.Services;
 using OneID.Shared.Data;
 using OneID.Shared.Domain;
 using OneID.Shared.Infrastructure;
+using OneID.Shared.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -43,47 +44,21 @@ builder.Services.AddCors();
 Console.WriteLine("=============== ADDING RATE LIMITER ===============");
 Console.Out.Flush();
 
+// Load rate limit settings from database
+// Note: We use default settings here and will reload from database after seeding
+var defaultRateLimitSettings = RateLimitSettingsService.GetDefaultSettings();
+
 builder.Services.AddRateLimiter(options =>
 {
-    // 全局限流：每个IP每分钟100个请求
-    options.AddFixedWindowLimiter("global", opt =>
+    foreach (var setting in defaultRateLimitSettings.Where(s => s.Enabled))
     {
-        opt.PermitLimit = 100;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueLimit = 0;
-    });
-
-    // 登录API限流：每个IP每5分钟10次尝试，防止暴力破解
-    options.AddFixedWindowLimiter("login", opt =>
-    {
-        opt.PermitLimit = 10;
-        opt.Window = TimeSpan.FromMinutes(5);
-        opt.QueueLimit = 0;
-    });
-
-    // Token端点限流：每个IP每分钟20个请求
-    options.AddFixedWindowLimiter("token", opt =>
-    {
-        opt.PermitLimit = 20;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueLimit = 0;
-    });
-
-    // 注册API限流：每个IP每小时5次注册
-    options.AddFixedWindowLimiter("register", opt =>
-    {
-        opt.PermitLimit = 5;
-        opt.Window = TimeSpan.FromHours(1);
-        opt.QueueLimit = 0;
-    });
-
-    // 密码重置限流：每个IP每小时3次
-    options.AddFixedWindowLimiter("password-reset", opt =>
-    {
-        opt.PermitLimit = 3;
-        opt.Window = TimeSpan.FromHours(1);
-        opt.QueueLimit = 0;
-    });
+        options.AddFixedWindowLimiter(setting.LimiterName, opt =>
+        {
+            opt.PermitLimit = setting.PermitLimit;
+            opt.Window = TimeSpan.FromSeconds(setting.WindowSeconds);
+            opt.QueueLimit = setting.QueueLimit;
+        });
+    }
 });
 
 Console.WriteLine("=============== ADDING DATABASE ===============");
@@ -122,7 +97,6 @@ builder.Services.AddLocalizationService(); // 添加国际化服务
 builder.Services.AddOneIdInfrastructure();
 
 builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.SectionName));
-builder.Services.Configure<ExternalAuthOptions>(builder.Configuration.GetSection(ExternalAuthOptions.SectionName));
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
 // 添加后台服务
@@ -219,6 +193,12 @@ authBuilder.AddApiKeyAuthentication();
 
 // 注册动态配置服务，稍后在数据库初始化后加载
 builder.Services.AddSingleton<IDynamicExternalAuthConfigurationService, DynamicExternalAuthConfigurationService>();
+
+// 配置热更新服务
+builder.Services.Configure<HotReloadOptions>(
+    builder.Configuration.GetSection(HotReloadOptions.SectionName));
+builder.Services.AddSingleton<IConfigurationRefreshService, ConfigurationRefreshService>();
+builder.Services.AddHostedService<ConfigurationPollingService>();
 
 builder.Services.AddOpenIddict()
     .AddCore(options =>

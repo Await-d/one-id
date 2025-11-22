@@ -83,6 +83,7 @@ public sealed class SystemSettingsService : ISystemSettingsService
         existing.Description = setting.Description;
         existing.UpdatedAt = DateTime.UtcNow;
         existing.LastModifiedBy = modifiedBy;
+        existing.IsModified = true; // 标记为已修改，防止 Seed 覆盖
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -183,6 +184,7 @@ public sealed class SystemSettingsService : ISystemSettingsService
         setting.Value = value;
         setting.UpdatedAt = DateTime.UtcNow;
         setting.LastModifiedBy = modifiedBy;
+        setting.IsModified = true; // 标记为已修改，防止 Seed 覆盖
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -244,6 +246,7 @@ public sealed class SystemSettingsService : ISystemSettingsService
         setting.Value = setting.DefaultValue;
         setting.UpdatedAt = DateTime.UtcNow;
         setting.LastModifiedBy = "System";
+        setting.IsModified = false; // 重置为默认值，允许 Seed 更新
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -261,6 +264,7 @@ public sealed class SystemSettingsService : ISystemSettingsService
             setting.Value = setting.DefaultValue!;
             setting.UpdatedAt = DateTime.UtcNow;
             setting.LastModifiedBy = "System";
+            setting.IsModified = false; // 重置为默认值，允许 Seed 更新
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -288,7 +292,7 @@ public sealed class SystemSettingsService : ISystemSettingsService
         _logger.LogInformation("Default system settings ensured, {Count} settings", defaultSettings.Count);
     }
 
-    private List<SystemSetting> GetDefaultSettings()
+    public static List<SystemSetting> GetDefaultSettings()
     {
         return new List<SystemSetting>
         {

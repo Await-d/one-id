@@ -6,7 +6,6 @@ using OneID.Shared.Domain;
 
 namespace OneID.AdminApi.Controllers;
 
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class IpAccessRulesController : ControllerBase

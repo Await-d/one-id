@@ -7,7 +7,6 @@ namespace OneID.AdminApi.Controllers;
 /// <summary>
 /// 用户批量导入控制器
 /// </summary>
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class UserImportController : ControllerBase

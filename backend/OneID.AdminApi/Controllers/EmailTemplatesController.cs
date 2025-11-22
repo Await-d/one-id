@@ -8,7 +8,6 @@ namespace OneID.AdminApi.Controllers;
 /// <summary>
 /// 邮件模板控制器
 /// </summary>
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class EmailTemplatesController : ControllerBase

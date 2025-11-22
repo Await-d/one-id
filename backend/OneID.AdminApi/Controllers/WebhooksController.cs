@@ -12,7 +12,6 @@ namespace OneID.AdminApi.Controllers;
 /// <summary>
 /// Webhook管理控制器
 /// </summary>
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class WebhooksController : ControllerBase

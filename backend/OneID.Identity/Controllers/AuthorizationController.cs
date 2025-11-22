@@ -41,8 +41,34 @@ public class AuthorizationController(
         }
 
         // 获取用户信息
-        var user = await userManager.GetUserAsync(result.Principal) ??
-            throw new InvalidOperationException("The user details cannot be retrieved.");
+        var user = await userManager.GetUserAsync(result.Principal);
+        if (user == null)
+        {
+            // 如果通过Principal获取失败，尝试从声明中获取用户ID
+            var userId = result.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                userId = result.Principal?.FindFirst("sub")?.Value;
+            }
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                userId = result.Principal?.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            }
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                user = await userManager.FindByIdAsync(userId);
+            }
+        }
+        
+        if (user == null)
+        {
+            // Log the principal claims for debugging
+            var principalClaims = string.Join(", ", result.Principal?.Claims?.Select(c => $"{c.Type}={c.Value}") ?? new[] { "no claims" });
+            throw new InvalidOperationException($"The user details cannot be retrieved. Principal claims: {principalClaims}");
+        }
 
         // 检查是否需要显示consent页面
         // 如果请求包含prompt=consent或者用户之前没有同意过，则显示consent页面

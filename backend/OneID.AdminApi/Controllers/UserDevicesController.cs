@@ -8,7 +8,6 @@ namespace OneID.AdminApi.Controllers;
 /// <summary>
 /// 用户设备管理控制器（管理员）
 /// </summary>
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class UserDevicesController : ControllerBase

@@ -8,7 +8,6 @@ namespace OneID.AdminApi.Controllers;
 /// <summary>
 /// 异常登录检测控制器
 /// </summary>
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class AnomalyDetectionController : ControllerBase

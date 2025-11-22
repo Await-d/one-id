@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { submitForm, extractSearchParams, redirectWithError } from "../lib/formUtils";
+import i18n from "../i18n/config";
 
 interface Scope {
     name: string;
@@ -51,6 +52,9 @@ export function Consent() {
                     `/api/consent/info?client_id=${encodeURIComponent(clientId)}&scope=${encodeURIComponent(scope || "")}`,
                     {
                         credentials: "include",
+                        headers: {
+                            "Accept-Language": i18n.language || "en",
+                        },
                     }
                 );
 

@@ -4,6 +4,12 @@ public sealed class SeedOptions
 {
     public const string SectionName = "Seed";
 
+    /// <summary>
+    /// 强制更新所有配置（忽略 IsModified 标记）
+    /// 环境变量: Seed__ForceUpdate=true
+    /// </summary>
+    public bool ForceUpdate { get; init; } = false;
+
     public AdminSeedOptions Admin { get; init; } = new();
     public OidcSeedOptions Oidc { get; init; } = new();
     public ExternalAuthSeedOptions ExternalAuth { get; init; } = new();

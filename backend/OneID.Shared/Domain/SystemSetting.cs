@@ -92,6 +92,12 @@ public class SystemSetting
     public string? LastModifiedBy { get; set; }
 
     /// <summary>
+    /// 是否已被修改（非默认值）
+    /// 用于判断是否应该被 Seed 配置更新
+    /// </summary>
+    public bool IsModified { get; set; } = false;
+
+    /// <summary>
     /// 验证规则（JSON格式）
     /// 例如：{ "min": 1, "max": 100 } 或 { "regex": "^[0-9]+$" }
     /// </summary>

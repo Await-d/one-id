@@ -25,6 +25,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<UserDevice> UserDevices => Set<UserDevice>();
     public DbSet<Webhook> Webhooks => Set<Webhook>();
     public DbSet<WebhookLog> WebhookLogs => Set<WebhookLog>();
+    public DbSet<RateLimitSetting> RateLimitSettings => Set<RateLimitSetting>();
+    public DbSet<ConfigurationVersion> ConfigurationVersions => Set<ConfigurationVersion>();
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -334,5 +336,138 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                   .HasForeignKey(e => e.WebhookId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+
+        builder.Entity<RateLimitSetting>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.LimiterName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.LastModifiedBy).HasMaxLength(256);
+            
+            entity.HasIndex(e => e.LimiterName).IsUnique();
+            entity.HasIndex(e => e.Enabled);
+            entity.HasIndex(e => e.SortOrder);
+        });
+
+        builder.Entity<ConfigurationVersion>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Version).IsRequired();
+            entity.Property(e => e.LastUpdated).IsRequired();
+            entity.Property(e => e.LastChangedBy).HasMaxLength(200);
+            
+            // 确保全局只有一条记录
+            entity.HasData(new ConfigurationVersion
+            {
+                Id = 1,
+                Version = 1,
+                LastUpdated = DateTime.UtcNow,
+                LastChangedBy = "Initial"
+            });
+        });
+    }
+
+    /// <summary>
+    /// 覆盖 SaveChangesAsync 以自动更新 UpdatedAt 字段和配置版本号
+    /// </summary>
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        // 自动更新 UpdatedAt 字段
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+        // 跟踪配置变更类型（用于更新 ConfigurationVersion）
+        string? configChangedBy = null;
+
+        foreach (var entry in entries)
+        {
+            // 设置 UpdatedAt（如果实体有该属性）
+            var updatedAtProperty = entry.Entity.GetType().GetProperty("UpdatedAt");
+            if (updatedAtProperty != null && updatedAtProperty.PropertyType == typeof(DateTime))
+            {
+                updatedAtProperty.SetValue(entry.Entity, DateTime.UtcNow);
+            }
+
+            // 设置 CreatedAt（仅在新增时）
+            if (entry.State == EntityState.Added)
+            {
+                var createdAtProperty = entry.Entity.GetType().GetProperty("CreatedAt");
+                if (createdAtProperty != null && createdAtProperty.PropertyType == typeof(DateTime))
+                {
+                    var currentValue = (DateTime?)createdAtProperty.GetValue(entry.Entity);
+                    // 只有当 CreatedAt 还是默认值时才设置
+                    if (currentValue == null || currentValue == default(DateTime))
+                    {
+                        createdAtProperty.SetValue(entry.Entity, DateTime.UtcNow);
+                    }
+                }
+            }
+
+            // 检测配置实体变更（用于版本号更新）
+            if (configChangedBy == null && entry.Entity is not ConfigurationVersion)
+            {
+                var entityType = entry.Entity.GetType().Name;
+                if (IsConfigurationEntity(entityType))
+                {
+                    configChangedBy = entityType;
+                }
+            }
+        }
+
+        // 如果有配置变更，更新 ConfigurationVersion
+        if (configChangedBy != null)
+        {
+            await IncrementConfigurationVersionAsync(configChangedBy, cancellationToken);
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// 判断实体是否为配置实体
+    /// </summary>
+    private static bool IsConfigurationEntity(string entityTypeName)
+    {
+        return entityTypeName switch
+        {
+            nameof(RateLimitSetting) => true,
+            nameof(CorsSetting) => true,
+            nameof(ExternalAuthProvider) => true,
+            nameof(SystemSetting) => true,
+            nameof(EmailConfiguration) => true,
+            nameof(EmailTemplate) => true,
+            nameof(ClientValidationSetting) => true,
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// 递增配置版本号
+    /// </summary>
+    private async Task IncrementConfigurationVersionAsync(string changedBy, CancellationToken cancellationToken)
+    {
+        // 查找或创建 ConfigurationVersion 记录
+        var configVersion = await ConfigurationVersions.FindAsync(new object[] { 1 }, cancellationToken);
+        
+        if (configVersion == null)
+        {
+            // 如果不存在，创建初始记录
+            configVersion = new ConfigurationVersion
+            {
+                Id = 1,
+                Version = 1,
+                LastUpdated = DateTime.UtcNow,
+                LastChangedBy = changedBy
+            };
+            ConfigurationVersions.Add(configVersion);
+        }
+        else
+        {
+            // 递增版本号
+            configVersion.Version++;
+            configVersion.LastUpdated = DateTime.UtcNow;
+            configVersion.LastChangedBy = changedBy;
+        }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
 using OneID.Shared.Domain;
+using OneID.Shared.Infrastructure;
 
 namespace OneID.Identity.Controllers;
 
@@ -11,7 +12,8 @@ namespace OneID.Identity.Controllers;
 public class ConsentController(
     IOpenIddictApplicationManager applicationManager,
     IOpenIddictScopeManager scopeManager,
-    UserManager<AppUser> userManager) : ControllerBase
+    UserManager<AppUser> userManager,
+    ILocalizationService localizationService) : ControllerBase
 {
     /// <summary>
     /// 获取授权同意信息
@@ -63,16 +65,16 @@ public class ConsentController(
         });
     }
 
-    private static string GetDefaultScopeDescription(string scopeName)
+    private string GetDefaultScopeDescription(string scopeName)
     {
         return scopeName switch
         {
-            "openid" => "Access your basic profile information",
-            "profile" => "Access your full profile information (name, photo, etc.)",
-            "email" => "Access your email address",
-            "offline_access" => "Maintain access when you're not present",
-            "admin_api" => "Access administrative API",
-            _ => $"Access {scopeName}"
+            "openid" => localizationService.GetString("Scope_OpenId"),
+            "profile" => localizationService.GetString("Scope_Profile"),
+            "email" => localizationService.GetString("Scope_Email"),
+            "offline_access" => localizationService.GetString("Scope_OfflineAccess"),
+            "admin_api" => localizationService.GetString("Scope_AdminApi"),
+            _ => localizationService.GetString("Scope_Default", scopeName)
         };
     }
 }

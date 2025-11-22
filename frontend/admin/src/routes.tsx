@@ -19,8 +19,7 @@ import SigningKeysPage from "./pages/SigningKeysPage";
 import SecurityRulesPage from "./pages/SecurityRulesPage";
 import GdprPage from "./pages/GdprPage";
 import TenantsPage from "./pages/TenantsPage";
-import { ClientValidationSettingsPage } from "./pages/ClientValidationSettingsPage";
-import { CorsSettingsPage } from "./pages/CorsSettingsPage";
+import SystemConfigPage from "./pages/SystemConfigPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import LoginPoliciesPage from "./pages/LoginPoliciesPage";
 import UserBehaviorPage from "./pages/UserBehaviorPage";
@@ -28,6 +27,8 @@ import AnomalousLoginsPage from "./pages/AnomalousLoginsPage";
 import UserDevicesPage from "./pages/UserDevicesPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import WebhooksPage from "./pages/WebhooksPage";
+import RateLimitSettingsPage from "./pages/RateLimitSettingsPage";
+import ConfigurationPage from "./pages/ConfigurationPage";
 
 export const router = createBrowserRouter([
   {
@@ -75,12 +76,8 @@ export const router = createBrowserRouter([
         element: <AuditLogsPage />,
       },
       {
-        path: "client-validation",
-        element: <ClientValidationSettingsPage />,
-      },
-      {
-        path: "cors-settings",
-        element: <CorsSettingsPage />,
+        path: "system-config",
+        element: <SystemConfigPage />,
       },
       {
         path: "email-config",
@@ -119,6 +116,10 @@ export const router = createBrowserRouter([
         element: <SystemSettingsPage />,
       },
       {
+        path: "rate-limit-settings",
+        element: <RateLimitSettingsPage />,
+      },
+      {
         path: "login-policies",
         element: <LoginPoliciesPage />,
       },
@@ -145,6 +146,10 @@ export const router = createBrowserRouter([
       {
         path: "users/:userId/devices",
         element: <UserDevicesPage />,
+      },
+      {
+        path: "configuration",
+        element: <ConfigurationPage />,
       },
     ],
   },

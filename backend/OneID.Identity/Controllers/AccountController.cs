@@ -179,6 +179,8 @@ public class AccountController(
         var user = await userManager.FindByNameAsync(request.UserName);
         if (user == null)
         {
+            var errorMsg = localization.GetString("InvalidCredentials");
+            
             // 记录失败的登录尝试（用户名不存在）
             await anomalyDetectionService.RecordAndAnalyzeLoginAsync(
                 userId: Guid.Empty,
@@ -193,12 +195,12 @@ public class AccountController(
                 action: "Login Failed",
                 category: "Authentication",
                 success: false,
-                errorMessage: "Invalid username or password"
+                errorMessage: errorMsg
             );
             return BadRequest(new LoginResponse(
                 Success: false,
                 RequiresTwoFactor: false,
-                Message: "Invalid username or password",
+                Message: errorMsg,
                 UserId: null
             ));
         }
@@ -208,6 +210,8 @@ public class AccountController(
 
         if (result.IsLockedOut)
         {
+            var errorMsg = localization.GetString("AccountLocked");
+            
             // 记录账户锁定的登录尝试
             await anomalyDetectionService.RecordAndAnalyzeLoginAsync(
                 userId: user.Id,
@@ -223,18 +227,20 @@ public class AccountController(
                 category: "Security",
                 userId: user.Id,
                 success: false,
-                errorMessage: "Account is locked out"
+                errorMessage: errorMsg
             );
             return BadRequest(new LoginResponse(
                 Success: false,
                 RequiresTwoFactor: false,
-                Message: "Account is locked out. Please try again later.",
+                Message: errorMsg,
                 UserId: null
             ));
         }
 
         if (!result.Succeeded)
         {
+            var errorMsg = localization.GetString("InvalidCredentials");
+            
             // 记录密码错误的登录尝试
             await anomalyDetectionService.RecordAndAnalyzeLoginAsync(
                 userId: user.Id,
@@ -250,12 +256,12 @@ public class AccountController(
                 category: "Authentication",
                 userId: user.Id,
                 success: false,
-                errorMessage: "Invalid password"
+                errorMessage: errorMsg
             );
             return BadRequest(new LoginResponse(
                 Success: false,
                 RequiresTwoFactor: false,
-                Message: "Invalid username or password",
+                Message: errorMsg,
                 UserId: null
             ));
         }

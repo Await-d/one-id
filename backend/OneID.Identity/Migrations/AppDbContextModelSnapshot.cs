@@ -387,6 +387,38 @@ namespace OneID.Identity.Migrations
                     b.ToTable("ClientValidationSettings");
                 });
 
+            modelBuilder.Entity("OneID.Shared.Domain.ConfigurationVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("LastChangedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfigurationVersions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            LastChangedBy = "Initial",
+                            LastUpdated = new DateTime(2025, 11, 21, 8, 50, 12, 231, DateTimeKind.Utc).AddTicks(5237),
+                            Version = 1L
+                        });
+                });
+
             modelBuilder.Entity("OneID.Shared.Domain.CorsSetting", b =>
                 {
                     b.Property<Guid>("Id")
@@ -400,6 +432,9 @@ namespace OneID.Identity.Migrations
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<bool>("IsModified")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -431,6 +466,9 @@ namespace OneID.Identity.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsModified")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Provider")
@@ -500,6 +538,9 @@ namespace OneID.Identity.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsModified")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Language")
@@ -578,6 +619,9 @@ namespace OneID.Identity.Migrations
                         .HasColumnType("integer");
 
                     b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsModified")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
@@ -829,6 +873,68 @@ namespace OneID.Identity.Migrations
                     b.ToTable("LoginTimeRestrictions");
                 });
 
+            modelBuilder.Entity("OneID.Shared.Domain.RateLimitSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsModified")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("LimiterName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("PermitLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QueueLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("WindowSeconds")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Enabled");
+
+                    b.HasIndex("LimiterName")
+                        .IsUnique();
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("RateLimitSettings");
+                });
+
             modelBuilder.Entity("OneID.Shared.Domain.SecurityRule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -969,6 +1075,9 @@ namespace OneID.Identity.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsModified")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsReadOnly")
                         .HasColumnType("boolean");

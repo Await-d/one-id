@@ -42,7 +42,6 @@ public class HealthController : ControllerBase
     /// 详细健康检查（需要管理员权限）
     /// </summary>
     [HttpGet("detailed")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<HealthCheckResult>> GetDetailed()
     {
         var result = new HealthCheckResult

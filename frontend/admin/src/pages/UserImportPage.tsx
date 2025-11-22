@@ -121,23 +121,23 @@ export default function UserImportPage() {
 
   const errorColumns = [
     {
-      title: "Row",
+      title: t('userImport.row'),
       dataIndex: "rowNumber",
       key: "rowNumber",
       width: 80,
     },
     {
-      title: "Username",
+      title: t('userImport.username'),
       dataIndex: "userName",
       key: "userName",
     },
     {
-      title: "Email",
+      title: t('userImport.email'),
       dataIndex: "email",
       key: "email",
     },
     {
-      title: "Error",
+      title: t('userImport.error'),
       dataIndex: "errorMessage",
       key: "errorMessage",
     },
@@ -164,16 +164,16 @@ export default function UserImportPage() {
           >
             {instructions && (
               <Descriptions column={1} size="small">
-                <Descriptions.Item label="Required Columns">
+                <Descriptions.Item label={t('userImport.requiredColumns')}>
                   <Text code>{instructions.requiredColumns.join(", ")}</Text>
                 </Descriptions.Item>
-                <Descriptions.Item label="Optional Columns">
+                <Descriptions.Item label={t('userImport.optionalColumns')}>
                   <Text code>{instructions.optionalColumns.join(", ")}</Text>
                 </Descriptions.Item>
-                <Descriptions.Item label="Password Requirements">
+                <Descriptions.Item label={t('userImport.passwordRequirements')}>
                   {instructions.passwordRequirements}
                 </Descriptions.Item>
-                <Descriptions.Item label="Max File Size">
+                <Descriptions.Item label={t('userImport.maxFileSize')}>
                   {instructions.maxFileSize}
                 </Descriptions.Item>
               </Descriptions>
@@ -182,7 +182,7 @@ export default function UserImportPage() {
             {instructions && instructions.notes.length > 0 && (
               <>
                 <Divider />
-                <Title level={5}>Important Notes:</Title>
+                <Title level={5}>{t('userImport.importantNotes')}</Title>
                 <ul style={{ paddingLeft: 20 }}>
                   {instructions.notes.map((note, index) => (
                     <li key={index}>
@@ -200,22 +200,22 @@ export default function UserImportPage() {
               onClick={handleDownloadSample}
               loading={downloading}
             >
-              Download Sample CSV
+              {t('userImport.downloadSample')}
             </Button>
           </Card>
         </Col>
 
         {/* Upload Card */}
         <Col xs={24} lg={12}>
-          <Card title="Upload CSV File">
+          <Card title={t('userImport.uploadFile')}>
             <Space direction="vertical" style={{ width: "100%" }} size="large">
               <div>
-                <Text strong>Default Role:</Text>
+                <Text strong>{t('userImport.defaultRole')}:</Text>
                 <Select
                   style={{ width: "100%", marginTop: 8 }}
                   value={selectedRole}
                   onChange={setSelectedRole}
-                  placeholder="Select default role"
+                  placeholder={t('userImport.selectRole')}
                 >
                   {roles.map((role) => (
                     <Select.Option key={role.id} value={role.name}>
@@ -224,7 +224,7 @@ export default function UserImportPage() {
                   ))}
                 </Select>
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                  This role will be assigned to users if not specified in CSV
+                  {t('userImport.defaultRoleHelp')}
                 </Text>
               </div>
 
@@ -245,7 +245,7 @@ export default function UserImportPage() {
                   accept=".csv"
                   maxCount={1}
                 >
-                  <Button icon={<UploadOutlined />}>Select CSV File</Button>
+                  <Button icon={<UploadOutlined />}>{t('userImport.selectFile')}</Button>
                 </Upload>
               </div>
 
@@ -257,7 +257,7 @@ export default function UserImportPage() {
                 block
                 size="large"
               >
-                {uploading ? "Importing..." : "Start Import"}
+                {uploading ? t('userImport.importing') : t('userImport.startImport')}
               </Button>
             </Space>
           </Card>
@@ -266,18 +266,18 @@ export default function UserImportPage() {
 
       {/* Import Results */}
       {importResult && (
-        <Card title="Import Results" style={{ marginTop: 16 }}>
+        <Card title={t('userImport.importResults')} style={{ marginTop: 16 }}>
           <Row gutter={16}>
             <Col xs={24} sm={8}>
               <Statistic
-                title="Total Rows"
+                title={t('userImport.totalRows')}
                 value={importResult.totalRows}
                 prefix={<InfoCircleOutlined />}
               />
             </Col>
             <Col xs={24} sm={8}>
               <Statistic
-                title="Success"
+                title={t('userImport.success')}
                 value={importResult.successCount}
                 valueStyle={{ color: "#3f8600" }}
                 prefix={<CheckCircleOutlined />}
@@ -285,7 +285,7 @@ export default function UserImportPage() {
             </Col>
             <Col xs={24} sm={8}>
               <Statistic
-                title="Failures"
+                title={t('userImport.failures')}
                 value={importResult.failureCount}
                 valueStyle={{ color: "#cf1322" }}
                 prefix={<CloseCircleOutlined />}
@@ -297,8 +297,8 @@ export default function UserImportPage() {
             <>
               <Divider />
               <Alert
-                message="Import Errors"
-                description={`${importResult.errors.length} rows failed to import. See details below.`}
+                message={t('userImport.importErrors')}
+                description={t('userImport.importErrorsDesc', { count: importResult.errors.length })}
                 type="error"
                 showIcon
                 style={{ marginBottom: 16 }}
@@ -315,8 +315,8 @@ export default function UserImportPage() {
 
           {importResult.successCount > 0 && importResult.failureCount === 0 && (
             <Alert
-              message="All users imported successfully!"
-              description={`${importResult.successCount} users have been created and assigned roles.`}
+              message={t('userImport.allSuccess')}
+              description={t('userImport.allSuccessDesc', { count: importResult.successCount })}
               type="success"
               showIcon
               style={{ marginTop: 16 }}

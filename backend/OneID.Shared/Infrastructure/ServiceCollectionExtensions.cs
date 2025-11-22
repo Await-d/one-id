@@ -73,6 +73,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserDeviceService, UserDeviceService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IWebhookService, WebhookService>();
+        services.AddScoped<IRateLimitSettingsService, RateLimitSettingsService>();
         
         return services;
     }

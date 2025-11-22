@@ -53,7 +53,13 @@ public class EmailConfiguration
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
-    
+
+    /// <summary>
+    /// 是否已被修改（非默认值）
+    /// 用于判断是否应该被 Seed 配置更新
+    /// </summary>
+    public bool IsModified { get; set; } = false;
+
     /// <summary>
     /// Decrypt SMTP password
     /// </summary>

@@ -4,7 +4,6 @@ using OneID.Shared.Infrastructure;
 
 namespace OneID.AdminApi.Controllers;
 
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class BulkOperationsController : ControllerBase

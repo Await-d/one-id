@@ -13,6 +13,7 @@ using OneID.Shared.Application.ExternalAuth;
 using OneID.Shared.Domain;
 using OneID.Shared.Data;
 using OneID.Shared.Infrastructure;
+using OneID.Shared.Configuration;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +64,18 @@ builder.Services.AddScoped<IUserImportService, UserImportService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<IUserDeviceService, UserDeviceService>();
+builder.Services.AddScoped<IUserBehaviorAnalyticsService, UserBehaviorAnalyticsService>();
+builder.Services.AddScoped<IAnomalyDetectionService, AnomalyDetectionService>();
+builder.Services.AddScoped<IWebhookService, WebhookService>();
+
+// 添加 HttpClient（WebhookService 需要）
+builder.Services.AddHttpClient();
+
+// 配置热更新服务
+builder.Services.Configure<HotReloadOptions>(
+    builder.Configuration.GetSection(HotReloadOptions.SectionName));
+builder.Services.AddSingleton<IConfigurationRefreshService, ConfigurationRefreshService>();
+builder.Services.AddHostedService<ConfigurationPollingService>();
 
 // 配置 ForwardedHeaders 以支持反向代理
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -138,45 +151,35 @@ builder.Services.AddCors();
 
 builder.Services.AddAuthorization(options =>
 {
-    // 添加 admin_api scope 验证策略
-    options.AddPolicy("AdminApiScope", policy =>
+    // 开发/测试环境：仅需要身份验证
+    var isDevelopment = !builder.Environment.IsProduction();
+
+    if (isDevelopment)
     {
-        policy.RequireAuthenticatedUser();
-        // 检查 scope claim 中是否包含 admin_api
-        // OpenIddict 可能将 scope 存储为单个字符串或多个独立 claim
-        policy.RequireAssertion(context =>
+        // 开发环境：任何已认证用户都可以访问 Admin API
+        options.AddPolicy("AdminApiScope", policy =>
         {
-            var logger = context.Resource as HttpContext;
-            
-            // 方式1: 检查单个 scope claim（空格分隔）
-            var scopeClaim = context.User.FindFirst("scope")?.Value;
-            if (scopeClaim != null)
-            {
-                logger?.RequestServices.GetRequiredService<ILogger<Program>>()
-                    .LogInformation("Scope claim (single): {Scope}", scopeClaim);
-                if (scopeClaim.Split(' ').Contains("admin_api"))
-                    return true;
-            }
-            
-            // 方式2: 检查多个 scope claims
-            var scopeClaims = context.User.FindAll("scope").Select(c => c.Value).ToList();
-            if (scopeClaims.Any())
-            {
-                logger?.RequestServices.GetRequiredService<ILogger<Program>>()
-                    .LogInformation("Scope claims (multiple): {Scopes}", string.Join(", ", scopeClaims));
-                if (scopeClaims.Contains("admin_api"))
-                    return true;
-            }
-            
-            // 记录所有 claims 用于调试
-            var allClaims = context.User.Claims.Select(c => $"{c.Type}={c.Value}");
-            logger?.RequestServices.GetRequiredService<ILogger<Program>>()
-                .LogWarning("Authorization failed. All claims: {Claims}", string.Join("; ", allClaims));
-            
-            return false;
+            policy.RequireAuthenticatedUser();
         });
-    });
-    
+    }
+    else
+    {
+        // 生产环境：需要验证 admin_api scope
+        options.AddPolicy("AdminApiScope", policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireAssertion(context =>
+            {
+                var scopeClaim = context.User.FindFirst("scope")?.Value;
+                if (scopeClaim != null && scopeClaim.Split(' ').Contains("admin_api"))
+                    return true;
+
+                var scopeClaims = context.User.FindAll("scope").Select(c => c.Value).ToList();
+                return scopeClaims.Contains("admin_api");
+            });
+        });
+    }
+
     // 不设置全局 FallbackPolicy，让 SPA 路由（callback 等）可以匿名访问
     // API 控制器已通过 [Authorize] 特性单独保护
 });
@@ -226,22 +229,8 @@ options.DefaultFileNames.Add("index.html");
 app.UseDefaultFiles(options);
 app.UseStaticFiles();
 
-// CORS 配置 - 仅在开发环境启用
-// 生产环境通过 Nginx 反向代理实现同域访问，不需要 CORS
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors(policy =>
-    {
-        policy.WithOrigins(
-                "http://localhost:5101",  // Identity Server (开发)
-                "http://localhost:5173",  // Vite dev server
-                "http://localhost:18080"  // 本地测试环境
-            )
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-    });
-}
+// CORS 配置
+app.ConfigureAdminApiCors();
 
 app.UseRouting();
 app.UseAuthentication();

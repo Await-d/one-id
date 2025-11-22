@@ -48,24 +48,29 @@ export default function SystemSettingsPage() {
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
 
-  // 获取所有设置
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ["systemSettings", selectedGroup],
-    queryFn: () => systemSettingsApi.getAll(selectedGroup),
+  // 获取所有设置（不传递 selectedGroup，始终获取全部）
+  const { data: allSettings, isLoading } = useQuery({
+    queryKey: ["systemSettings"],
+    queryFn: () => systemSettingsApi.getAll(undefined),
   });
+
+  // 根据选中的分组过滤设置
+  const settings = selectedGroup
+    ? allSettings?.filter((s) => s.group === selectedGroup)
+    : allSettings;
 
   // 更新设置
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) =>
       systemSettingsApi.update(id, data),
     onSuccess: () => {
-      message.success("Setting updated successfully");
+      message.success(t('systemSettings.updateSuccess'));
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
       setEditModalOpen(false);
       setSelectedSetting(null);
     },
     onError: (error: Error) => {
-      message.error(`Failed to update setting: ${error.message}`);
+      message.error(`${t('systemSettings.updateFailed')}: ${error.message}`);
     },
   });
 
@@ -73,13 +78,13 @@ export default function SystemSettingsPage() {
   const createMutation = useMutation({
     mutationFn: (data: any) => systemSettingsApi.create(data),
     onSuccess: () => {
-      message.success("Setting created successfully");
+      message.success(t('systemSettings.createSuccess'));
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
       setCreateModalOpen(false);
       createForm.resetFields();
     },
     onError: (error: Error) => {
-      message.error(`Failed to create setting: ${error.message}`);
+      message.error(`${t('systemSettings.createFailed')}: ${error.message}`);
     },
   });
 
@@ -87,11 +92,11 @@ export default function SystemSettingsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => systemSettingsApi.delete(id),
     onSuccess: () => {
-      message.success("Setting deleted successfully");
+      message.success(t('systemSettings.deleteSuccess'));
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
     },
     onError: (error: Error) => {
-      message.error(`Failed to delete setting: ${error.message}`);
+      message.error(`${t('systemSettings.deleteFailed')}: ${error.message}`);
     },
   });
 
@@ -99,11 +104,11 @@ export default function SystemSettingsPage() {
   const resetMutation = useMutation({
     mutationFn: (key: string) => systemSettingsApi.reset(key),
     onSuccess: () => {
-      message.success("Setting reset to default value");
+      message.success(t('systemSettings.resetSuccess'));
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
     },
     onError: (error: Error) => {
-      message.error(`Failed to reset setting: ${error.message}`);
+      message.error(`${t('systemSettings.resetFailed')}: ${error.message}`);
     },
   });
 
@@ -111,11 +116,11 @@ export default function SystemSettingsPage() {
   const resetGroupMutation = useMutation({
     mutationFn: (group: string) => systemSettingsApi.resetGroup(group),
     onSuccess: () => {
-      message.success("Settings group reset to default values");
+      message.success(t('systemSettings.resetGroupSuccess'));
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
     },
     onError: (error: Error) => {
-      message.error(`Failed to reset group: ${error.message}`);
+      message.error(`${t('systemSettings.resetGroupFailed')}: ${error.message}`);
     },
   });
 
@@ -123,11 +128,11 @@ export default function SystemSettingsPage() {
   const ensureDefaultsMutation = useMutation({
     mutationFn: () => systemSettingsApi.ensureDefaults(),
     onSuccess: () => {
-      message.success("Default settings ensured");
+      message.success(t('systemSettings.ensureDefaultsSuccess'));
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
     },
     onError: (error: Error) => {
-      message.error(`Failed to ensure defaults: ${error.message}`);
+      message.error(`${t('systemSettings.ensureDefaultsFailed')}: ${error.message}`);
     },
   });
 
@@ -164,8 +169,8 @@ export default function SystemSettingsPage() {
     }
   };
 
-  // 按分组获取设置
-  const settingsByGroup = settings?.reduce((acc, setting) => {
+  // 按分组获取设置（基于所有设置，不受过滤影响）
+  const settingsByGroup = allSettings?.reduce((acc, setting) => {
     if (!acc[setting.group]) {
       acc[setting.group] = [];
     }
@@ -178,48 +183,46 @@ export default function SystemSettingsPage() {
   // 表格列定义
   const columns: ColumnsType<SystemSetting> = [
     {
-      title: "Setting",
+      title: t('systemSettings.setting'),
       key: "setting",
       width: 250,
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>
-            {record.displayName || record.key}
+            {t(`systemSettings.settingDisplayNames.${record.key}`, record.displayName || record.key)}
             {record.isReadOnly && (
               <Tag color="orange" style={{ marginLeft: 8 }}>
-                Read-Only
+                {t('systemSettings.readOnly')}
               </Tag>
             )}
             {record.isSensitive && (
               <Tag color="red" style={{ marginLeft: 8 }}>
-                Sensitive
+                {t('systemSettings.sensitive')}
               </Tag>
             )}
           </div>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {record.key}
           </Text>
-          {record.description && (
-            <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-              {record.description}
-            </div>
-          )}
+          <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+            {t(`systemSettings.settingDescriptions.${record.key}`, record.description || '')}
+          </div>
         </div>
       ),
     },
     {
-      title: "Value",
+      title: t('systemSettings.value'),
       key: "value",
       width: 200,
       render: (_, record) => {
         if (record.isSensitive) {
           return <Text type="secondary">••••••••</Text>;
         }
-        
+
         if (record.valueType === "Boolean") {
           return (
             <Tag color={record.value === "True" ? "green" : "default"}>
-              {record.value === "True" ? "Enabled" : "Disabled"}
+              {record.value === "True" ? t('systemSettings.enabled') : t('systemSettings.disabled')}
             </Tag>
           );
         }
@@ -232,14 +235,14 @@ export default function SystemSettingsPage() {
       },
     },
     {
-      title: "Type",
+      title: t('systemSettings.type'),
       dataIndex: "valueType",
       key: "valueType",
       width: 100,
-      render: (type: string) => <Tag>{type}</Tag>,
+      render: (type: string) => <Tag>{t(`systemSettings.valueTypes.${type}`, type)}</Tag>,
     },
     {
-      title: "Default",
+      title: t('systemSettings.default'),
       dataIndex: "defaultValue",
       key: "defaultValue",
       width: 120,
@@ -250,7 +253,7 @@ export default function SystemSettingsPage() {
       ),
     },
     {
-      title: "Last Modified",
+      title: t('systemSettings.lastModified'),
       key: "modified",
       width: 150,
       render: (_, record) => (
@@ -269,7 +272,7 @@ export default function SystemSettingsPage() {
       ),
     },
     {
-      title: "Actions",
+      title: t('systemSettings.actions'),
       key: "actions",
       width: 180,
       fixed: "right",
@@ -282,15 +285,15 @@ export default function SystemSettingsPage() {
             onClick={() => handleEdit(record)}
             disabled={record.isReadOnly}
           >
-            Edit
+            {t('systemSettings.edit')}
           </Button>
           {record.defaultValue && (
             <Popconfirm
-              title="Reset to default value?"
-              description="This will restore the setting to its default value."
+              title={t('systemSettings.resetConfirm')}
+              description={t('systemSettings.resetDescription')}
               onConfirm={() => resetMutation.mutate(record.key)}
-              okText="Reset"
-              cancelText="Cancel"
+              okText={t('systemSettings.reset')}
+              cancelText={t('common.cancel')}
             >
               <Button
                 type="link"
@@ -298,21 +301,21 @@ export default function SystemSettingsPage() {
                 icon={<ReloadOutlined />}
                 disabled={record.isReadOnly || record.value === record.defaultValue}
               >
-                Reset
+                {t('systemSettings.reset')}
               </Button>
             </Popconfirm>
           )}
           {!record.isReadOnly && (
             <Popconfirm
-              title="Delete this setting?"
-              description="This action cannot be undone."
+              title={t('systemSettings.deleteConfirm')}
+              description={t('systemSettings.deleteDescription')}
               onConfirm={() => deleteMutation.mutate(record.id)}
-              okText="Delete"
+              okText={t('systemSettings.delete')}
               okType="danger"
-              cancelText="Cancel"
+              cancelText={t('common.cancel')}
             >
               <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-                Delete
+                {t('systemSettings.delete')}
               </Button>
             </Popconfirm>
           )}
@@ -325,15 +328,15 @@ export default function SystemSettingsPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>
-          <SettingOutlined /> System Settings
+          <SettingOutlined /> {t('systemSettings.title')}
         </Title>
         <Paragraph type="secondary">
-          Configure system-wide settings for authentication, security, sessions, and more.
+          {t('systemSettings.subtitle')}
         </Paragraph>
 
         <Alert
-          message="Important"
-          description="Changes to system settings will affect all users and may require application restart for some settings to take effect."
+          message={t('systemSettings.importantTitle')}
+          description={t('systemSettings.importantMessage')}
           type="warning"
           showIcon
           icon={<WarningOutlined />}
@@ -346,30 +349,30 @@ export default function SystemSettingsPage() {
             icon={<PlusOutlined />}
             onClick={() => setCreateModalOpen(true)}
           >
-            Create Setting
+            {t('systemSettings.createSetting')}
           </Button>
           <Button
             icon={<CheckCircleOutlined />}
             onClick={() => ensureDefaultsMutation.mutate()}
             loading={ensureDefaultsMutation.isPending}
           >
-            Ensure Defaults
+            {t('systemSettings.ensureDefaults')}
           </Button>
           {selectedGroup && (
             <Popconfirm
-              title={`Reset all settings in ${selectedGroup} group?`}
-              description="This will restore all settings in this group to their default values."
+              title={t('systemSettings.resetGroupConfirm', { group: selectedGroup })}
+              description={t('systemSettings.resetGroupDescription')}
               onConfirm={() => resetGroupMutation.mutate(selectedGroup)}
-              okText="Reset Group"
+              okText={t('systemSettings.resetGroup')}
               okType="danger"
-              cancelText="Cancel"
+              cancelText={t('common.cancel')}
             >
               <Button
                 icon={<ReloadOutlined />}
                 loading={resetGroupMutation.isPending}
                 danger
               >
-                Reset Group
+                {t('systemSettings.resetGroup')}
               </Button>
             </Popconfirm>
           )}
@@ -383,11 +386,11 @@ export default function SystemSettingsPage() {
           items={[
             {
               key: undefined as any,
-              label: `All (${settings?.length || 0})`,
+              label: `${t('systemSettings.all')} (${allSettings?.length || 0})`,
             },
             ...groups.map((group) => ({
               key: group,
-              label: `${group} (${settingsByGroup[group]?.length || 0})`,
+              label: `${t(`systemSettings.groups.${group}`, group)} (${settingsByGroup[group]?.length || 0})`,
             })),
           ]}
         />
@@ -397,7 +400,7 @@ export default function SystemSettingsPage() {
           dataSource={settings}
           rowKey="id"
           loading={isLoading}
-          pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (total) => `Total ${total} settings` }}
+          pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (total) => t('systemSettings.totalSettings', { total }) }}
           scroll={{ x: 1200 }}
         />
       </Card>
@@ -406,7 +409,7 @@ export default function SystemSettingsPage() {
       <Modal
         title={
           <div>
-            <EditOutlined /> Edit Setting
+            <EditOutlined /> {t('systemSettings.editSetting')}
           </div>
         }
         open={editModalOpen}
@@ -422,16 +425,16 @@ export default function SystemSettingsPage() {
         {selectedSetting && (
           <>
             <Descriptions bordered column={1} size="small" style={{ marginBottom: 16 }}>
-              <Descriptions.Item label="Key">{selectedSetting.key}</Descriptions.Item>
-              <Descriptions.Item label="Group">{selectedSetting.group}</Descriptions.Item>
-              <Descriptions.Item label="Type">{selectedSetting.valueType}</Descriptions.Item>
+              <Descriptions.Item label={t('systemSettings.key')}>{selectedSetting.key}</Descriptions.Item>
+              <Descriptions.Item label={t('systemSettings.group')}>{t(`systemSettings.groups.${selectedSetting.group}`, selectedSetting.group)}</Descriptions.Item>
+              <Descriptions.Item label={t('systemSettings.type')}>{t(`systemSettings.valueTypes.${selectedSetting.valueType}`, selectedSetting.valueType)}</Descriptions.Item>
             </Descriptions>
 
             <Form form={form} layout="vertical">
               <Form.Item
-                label="Value"
+                label={t('systemSettings.value')}
                 name="value"
-                rules={[{ required: true, message: "Please enter a value" }]}
+                rules={[{ required: true, message: t('systemSettings.valueRequired') }]}
               >
                 {selectedSetting.valueType === "Boolean" ? (
                   <Select>
@@ -445,12 +448,12 @@ export default function SystemSettingsPage() {
                 )}
               </Form.Item>
 
-              <Form.Item label="Display Name" name="displayName">
-                <Input placeholder="Optional display name" />
+              <Form.Item label={t('systemSettings.displayName')} name="displayName">
+                <Input placeholder={t('systemSettings.displayNamePlaceholder')} />
               </Form.Item>
 
-              <Form.Item label="Description" name="description">
-                <TextArea rows={3} placeholder="Optional description" />
+              <Form.Item label={t('systemSettings.description')} name="description">
+                <TextArea rows={3} placeholder={t('systemSettings.descriptionPlaceholder')} />
               </Form.Item>
             </Form>
           </>
@@ -461,7 +464,7 @@ export default function SystemSettingsPage() {
       <Modal
         title={
           <div>
-            <PlusOutlined /> Create Setting
+            <PlusOutlined /> {t('systemSettings.createTitle')}
           </div>
         }
         open={createModalOpen}
@@ -475,74 +478,74 @@ export default function SystemSettingsPage() {
       >
         <Form form={createForm} layout="vertical">
           <Form.Item
-            label="Key"
+            label={t('systemSettings.key')}
             name="key"
-            rules={[{ required: true, message: "Please enter a key" }]}
+            rules={[{ required: true, message: t('systemSettings.keyRequired') }]}
           >
-            <Input placeholder="e.g., Feature.EnableNewFeature" />
+            <Input placeholder={t('systemSettings.keyPlaceholder')} />
           </Form.Item>
 
           <Form.Item
-            label="Group"
+            label={t('systemSettings.group')}
             name="group"
-            rules={[{ required: true, message: "Please select a group" }]}
+            rules={[{ required: true, message: t('systemSettings.groupRequired') }]}
           >
-            <Select placeholder="Select a group">
-              <Select.Option value="Authentication">Authentication</Select.Option>
-              <Select.Option value="Security">Security</Select.Option>
-              <Select.Option value="Password">Password</Select.Option>
-              <Select.Option value="TokenLifetime">TokenLifetime</Select.Option>
-              <Select.Option value="Session">Session</Select.Option>
-              <Select.Option value="Registration">Registration</Select.Option>
-              <Select.Option value="General">General</Select.Option>
+            <Select placeholder={t('systemSettings.groupPlaceholder')}>
+              <Select.Option value="Authentication">{t('systemSettings.groups.Authentication')}</Select.Option>
+              <Select.Option value="Security">{t('systemSettings.groups.Security')}</Select.Option>
+              <Select.Option value="Password">{t('systemSettings.groups.Password')}</Select.Option>
+              <Select.Option value="TokenLifetime">{t('systemSettings.groups.TokenLifetime')}</Select.Option>
+              <Select.Option value="Session">{t('systemSettings.groups.Session')}</Select.Option>
+              <Select.Option value="Registration">{t('systemSettings.groups.Registration')}</Select.Option>
+              <Select.Option value="General">{t('systemSettings.groups.General')}</Select.Option>
             </Select>
           </Form.Item>
 
           <Form.Item
-            label="Value Type"
+            label={t('systemSettings.type')}
             name="valueType"
             initialValue="String"
-            rules={[{ required: true, message: "Please select a value type" }]}
+            rules={[{ required: true, message: t('systemSettings.typeRequired') }]}
           >
             <Select>
-              <Select.Option value="String">String</Select.Option>
-              <Select.Option value="Integer">Integer</Select.Option>
-              <Select.Option value="Boolean">Boolean</Select.Option>
-              <Select.Option value="Decimal">Decimal</Select.Option>
-              <Select.Option value="JSON">JSON</Select.Option>
+              <Select.Option value="String">{t('systemSettings.valueTypes.String')}</Select.Option>
+              <Select.Option value="Integer">{t('systemSettings.valueTypes.Integer')}</Select.Option>
+              <Select.Option value="Boolean">{t('systemSettings.valueTypes.Boolean')}</Select.Option>
+              <Select.Option value="Decimal">{t('systemSettings.valueTypes.Decimal')}</Select.Option>
+              <Select.Option value="JSON">{t('systemSettings.valueTypes.JSON')}</Select.Option>
             </Select>
           </Form.Item>
 
           <Form.Item
-            label="Value"
+            label={t('systemSettings.value')}
             name="value"
-            rules={[{ required: true, message: "Please enter a value" }]}
+            rules={[{ required: true, message: t('systemSettings.valueRequired') }]}
           >
             <Input />
           </Form.Item>
 
-          <Form.Item label="Display Name" name="displayName">
-            <Input placeholder="Optional display name" />
+          <Form.Item label={t('systemSettings.displayName')} name="displayName">
+            <Input placeholder={t('systemSettings.displayNamePlaceholder')} />
           </Form.Item>
 
-          <Form.Item label="Description" name="description">
-            <TextArea rows={3} placeholder="Optional description" />
+          <Form.Item label={t('systemSettings.description')} name="description">
+            <TextArea rows={3} placeholder={t('systemSettings.descriptionPlaceholder')} />
           </Form.Item>
 
-          <Form.Item label="Default Value" name="defaultValue">
-            <Input placeholder="Optional default value" />
+          <Form.Item label={t('systemSettings.defaultValue')} name="defaultValue">
+            <Input placeholder={t('systemSettings.defaultValuePlaceholder')} />
           </Form.Item>
 
-          <Form.Item label="Sort Order" name="sortOrder" initialValue={0}>
+          <Form.Item label={t('systemSettings.sortOrder')} name="sortOrder" initialValue={0}>
             <InputNumber style={{ width: "100%" }} min={0} />
           </Form.Item>
 
           <Form.Item name="isSensitive" valuePropName="checked" initialValue={false}>
-            <Switch /> Sensitive (hide value in UI)
+            <Switch /> {t('systemSettings.isSensitive')}
           </Form.Item>
 
           <Form.Item name="isReadOnly" valuePropName="checked" initialValue={false}>
-            <Switch /> Read-Only (prevent modification)
+            <Switch /> {t('systemSettings.isReadOnly')}
           </Form.Item>
         </Form>
       </Modal>

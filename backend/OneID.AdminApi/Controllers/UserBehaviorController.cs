@@ -7,7 +7,6 @@ namespace OneID.AdminApi.Controllers;
 /// <summary>
 /// 用户行为分析控制器
 /// </summary>
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class UserBehaviorController : ControllerBase

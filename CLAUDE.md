@@ -517,6 +517,65 @@ Add to `appsettings.json` or environment variables:
 - `Otp.NET` - TOTP generation and validation
 - `QRCoder` - QR code image generation
 
+### Configuration Hot Reload
+
+OneID supports three approaches for configuration hot-reload:
+
+**1. API-based Configuration Reload** (Recommended for most cases)
+```bash
+# Reload all configurations
+curl -X POST http://localhost:5102/api/configuration/reload \
+  -H "Authorization: Bearer <admin-token>"
+
+# Reload specific configuration
+curl -X POST http://localhost:5102/api/configuration/reload/ratelimit
+curl -X POST http://localhost:5102/api/configuration/reload/cors
+curl -X POST http://localhost:5102/api/configuration/reload/externalauth
+
+# Check configuration status
+curl http://localhost:5102/api/configuration/status
+```
+
+**2. Automatic Polling** (Background service checks for changes)
+```json
+{
+  "HotReload": {
+    "PollingEnabled": true,
+    "PollingIntervalSeconds": 30,
+    "AutoApplyChanges": true
+  }
+}
+```
+
+Environment variables:
+```bash
+HotReload__PollingEnabled=true
+HotReload__PollingIntervalSeconds=60  # Increase for production
+```
+
+**3. Application Restart** (Required for full effect)
+```bash
+# Trigger graceful restart
+curl -X POST "http://localhost:5102/api/admin/restart?confirm=true" \
+  -H "Authorization: Bearer <admin-token>"
+
+# Get application info
+curl http://localhost:5102/api/admin/info
+```
+
+**Important Limitations:**
+- ⚠️ **RateLimit, CORS, and ExternalAuth** configurations require application restart to fully take effect
+- API reload updates in-memory state but middleware is configured at startup
+- For production, ensure container orchestrator (Docker/Kubernetes) has auto-restart policy
+- Admin Portal UI at `/admin/configuration` provides visual management
+
+**Configuration Endpoints:**
+- `GET /api/configuration/status` - View current configuration state
+- `POST /api/configuration/reload` - Reload all configurations
+- `POST /api/configuration/reload/{type}` - Reload specific type (ratelimit/cors/externalauth)
+- `POST /api/admin/restart?confirm=true` - Restart application
+- `GET /api/admin/info` - Get application runtime information
+
 ### Frontend Routes
 
 **Login SPA** (`frontend/login`):
@@ -541,6 +600,7 @@ Add to `appsettings.json` or environment variables:
 - `/external-auth` - External auth providers management
 - `/email-config` - Email configuration management
 - `/audit-logs` - Audit logs viewer with filtering
+- `/configuration` - Configuration hot reload management
 
 ## Key Files
 

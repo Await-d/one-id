@@ -7,7 +7,6 @@ namespace OneID.AdminApi.Controllers;
 /// <summary>
 /// 通知设置管理控制器
 /// </summary>
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class NotificationSettingsController : ControllerBase

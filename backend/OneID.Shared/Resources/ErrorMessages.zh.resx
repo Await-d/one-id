@@ -163,5 +163,25 @@
   <data name="EmailConfirmed" xml:space="preserve">
     <value>您的邮箱已成功验证。</value>
   </data>
+  
+  <!-- OAuth 权限范围描述 -->
+  <data name="Scope_OpenId" xml:space="preserve">
+    <value>访问您的基本资料信息</value>
+  </data>
+  <data name="Scope_Profile" xml:space="preserve">
+    <value>访问您的完整个人资料（姓名、照片等）</value>
+  </data>
+  <data name="Scope_Email" xml:space="preserve">
+    <value>访问您的电子邮箱地址</value>
+  </data>
+  <data name="Scope_OfflineAccess" xml:space="preserve">
+    <value>在您离线时保持访问权限</value>
+  </data>
+  <data name="Scope_AdminApi" xml:space="preserve">
+    <value>访问管理后台 API</value>
+  </data>
+  <data name="Scope_Default" xml:space="preserve">
+    <value>访问 {0}</value>
+  </data>
 </root>
 

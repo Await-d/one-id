@@ -92,5 +92,11 @@ public class EmailTemplate
     /// 更新时间
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// 是否已被修改（非默认值）
+    /// 用于判断是否应该被 Seed 配置更新
+    /// </summary>
+    public bool IsModified { get; set; } = false;
 }
 
