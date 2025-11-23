@@ -178,8 +178,7 @@ export function ExternalAuthProvidersPage() {
     },
   });
 
-  const columns: ColumnsType<ExternalAuthProvider> = useMemo(
-    () => [
+  const columns: ColumnsType<ExternalAuthProvider> = [
       {
         title: t("externalAuth.providerType"),
         dataIndex: "providerType",
@@ -234,9 +233,9 @@ export function ExternalAuthProvidersPage() {
         dataIndex: "scopes",
         key: "scopes",
         width: 200,
-        render: (scopes: string[]) => (
+        render: (scopes: string[] | undefined) => (
           <Space wrap>
-            {scopes.map((scope) => (
+            {scopes && scopes.map((scope) => (
               <Tag key={scope}>{scope}</Tag>
             ))}
           </Space>
@@ -324,9 +323,8 @@ export function ExternalAuthProvidersPage() {
           </Space>
         ),
       },
-    ],
-    [deleteMutation, toggleMutation, editForm, t, handleTestLogin]
-  );
+    ];
+
 
   return (
     <div style={{ padding: "24px" }}>
@@ -346,7 +344,7 @@ export function ExternalAuthProvidersPage() {
 
           <Table
             columns={columns}
-            dataSource={data || []}
+            dataSource={Array.isArray(data) ? data : []}
             loading={isLoading}
             rowKey="id"
             scroll={{ x: 1500 }}

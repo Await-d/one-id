@@ -111,8 +111,7 @@ export function UsersPage() {
     },
   });
 
-  const columns: ColumnsType<UserSummary> = useMemo(
-    () => [
+  const columns: ColumnsType<UserSummary> = [
       {
         title: t("users.username"),
         dataIndex: "userName",
@@ -173,9 +172,9 @@ export function UsersPage() {
         dataIndex: "roles",
         key: "roles",
         width: 150,
-        render: (roles: string[]) => (
+        render: (roles: string[] | undefined) => (
           <Space wrap>
-            {roles.length > 0 ? roles.map((role) => <Tag key={role}>{role}</Tag>) : "-"}
+            {roles && roles.length > 0 ? roles.map((role) => <Tag key={role}>{role}</Tag>) : "-"}
           </Space>
         ),
       },
@@ -184,7 +183,7 @@ export function UsersPage() {
         dataIndex: "externalLogins",
         key: "externalLogins",
         width: 150,
-        render: (logins: any[]) => logins.length,
+        render: (logins: any[] | undefined) => logins?.length || 0,
       },
       {
         title: t("users.actions"),
@@ -264,9 +263,8 @@ export function UsersPage() {
           );
         },
       },
-    ],
-    [deleteMutation, unlockMutation, editForm, t],
-  );
+    ];
+
 
   return (
     <div style={{ padding: "24px", background: "linear-gradient(to bottom right, #f0f9ff, #ffffff, #faf5ff)", minHeight: "100vh" }}>
@@ -305,7 +303,7 @@ export function UsersPage() {
 
           <Table
             columns={columns}
-            dataSource={data || []}
+            dataSource={Array.isArray(data) ? data : []}
             loading={isLoading}
             rowKey="id"
             scroll={{ x: 1500 }}
@@ -478,13 +476,13 @@ export function UsersPage() {
             <Descriptions.Item label={t("users.accessFailed")}>{viewingUser.accessFailedCount}</Descriptions.Item>
             <Descriptions.Item label={t("users.roles")}>
               <Space wrap>
-                {viewingUser.roles.length > 0
+                {viewingUser.roles && viewingUser.roles.length > 0
                   ? viewingUser.roles.map((role) => <Tag key={role}>{role}</Tag>)
                   : "-"}
               </Space>
             </Descriptions.Item>
             <Descriptions.Item label={t("users.linkedAccounts")}>
-              {viewingUser.externalLogins.length > 0 ? (
+              {viewingUser.externalLogins && viewingUser.externalLogins.length > 0 ? (
                 <Space direction="vertical">
                   {viewingUser.externalLogins.map((login) => (
                     <Tag key={login.providerKey} color="blue">

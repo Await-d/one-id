@@ -34,6 +34,9 @@ export default function RolesPage() {
         queryFn: () => rolesApi.getAll(),
     });
 
+    // Safe array for roles
+    const safeRoles = Array.isArray(roles) ? roles : [];
+
     // Fetch users in role
     const { data: usersInRole } = useQuery<UserRole[]>({
         queryKey: ['roleUsers', selectedRoleId],
@@ -191,7 +194,7 @@ export default function RolesPage() {
 
             <Table
                 columns={columns}
-                dataSource={roles || []}
+                dataSource={safeRoles}
                 rowKey="id"
                 loading={isLoading}
             />
@@ -225,7 +228,7 @@ export default function RolesPage() {
             </Modal>
 
             <Drawer
-                title={t('roles.usersInRole', { name: roles?.find(r => r.id === selectedRoleId)?.name })}
+                title={t('roles.usersInRole', { name: safeRoles.find(r => r.id === selectedRoleId)?.name })}
                 placement="right"
                 width={600}
                 onClose={() => setUsersDrawerOpen(false)}
@@ -233,7 +236,7 @@ export default function RolesPage() {
             >
                 <Table
                     columns={userColumns}
-                    dataSource={usersInRole || []}
+                    dataSource={Array.isArray(usersInRole) ? usersInRole : []}
                     rowKey="userId"
                     size="small"
                 />

@@ -183,7 +183,7 @@ export default function EmailConfigPage() {
 
             <Table
                 columns={columns}
-                dataSource={configurations || []}
+                dataSource={Array.isArray(configurations) ? configurations : []}
                 rowKey="id"
                 loading={isLoading}
             />

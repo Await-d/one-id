@@ -25,7 +25,8 @@ public static class CorsExtensions
                         "http://localhost:5101",   // Identity Server (开发)
                         "http://localhost:5173",   // Vite dev server
                         "http://localhost:18080",  // 本地测试环境 Identity
-                        "http://localhost:10230"   // Docker Compose Identity
+                        "http://localhost:10230",  // Docker Compose Identity
+                        "http://localhost:8088"    // Docker 部署 Identity (8088->5101)
                     )
                     .AllowAnyMethod()
                     .AllowAnyHeader()

@@ -35,10 +35,31 @@ import {
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
+// Default empty statistics object
+const defaultStatistics: DashboardStatistics = {
+  totalUsers: 0,
+  activeUsers24h: 0,
+  totalLogins: 0,
+  successfulLogins: 0,
+  failedLogins: 0,
+  loginSuccessRate: 0,
+  totalApiCalls: 0,
+  totalErrors: 0,
+  errorRate: 0,
+  activeSessions: 0,
+};
+
+// Type guard to validate DashboardStatistics
+const isValidStatistics = (data: unknown): data is DashboardStatistics => {
+  if (!data || typeof data !== "object") return false;
+  const stats = data as Record<string, unknown>;
+  return typeof stats.totalUsers === "number";
+};
+
 export default function DashboardPage() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
-  const [statistics, setStatistics] = useState<DashboardStatistics | null>(null);
+  const [statistics, setStatistics] = useState<DashboardStatistics>(defaultStatistics);
   const [loginTrends, setLoginTrends] = useState<LoginTrend[]>([]);
   const [apiStats, setApiStats] = useState<ApiCallStatistic[]>([]);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
@@ -63,11 +84,16 @@ export default function DashboardPage() {
         analyticsApi.getApiCallStatistics(10),
       ]);
 
-      setStatistics(stats);
-      setLoginTrends(trends);
-      setApiStats(apiCalls);
+      // Safe data validation - ensure correct types before setting state
+      setStatistics(isValidStatistics(stats) ? stats : defaultStatistics);
+      setLoginTrends(Array.isArray(trends) ? trends : []);
+      setApiStats(Array.isArray(apiCalls) ? apiCalls : []);
     } catch (error) {
       console.error("Failed to load dashboard data", error);
+      // Reset to safe defaults on error
+      setStatistics(defaultStatistics);
+      setLoginTrends([]);
+      setApiStats([]);
     } finally {
       setLoading(false);
     }
@@ -108,7 +134,7 @@ export default function DashboardPage() {
     {
       title: t('dashboard.successRate'),
       key: "successRate",
-      render: (_: any, record: LoginTrend) => {
+      render: (_: unknown, record: LoginTrend) => {
         const rate =
           record.totalLogins > 0
             ? (record.successfulLogins / record.totalLogins) * 100
@@ -159,15 +185,11 @@ export default function DashboardPage() {
     );
   }
 
-  if (!statistics) {
-    return <Alert message={t('dashboard.loadFailed')} type="error" />;
-  }
-
   return (
     <div>
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
         <Col>
-          <Title level={2}>📊 {t('dashboard.title')}</Title>
+          <Title level={2}>{t('dashboard.title')}</Title>
         </Col>
         <Col>
           <Space>
@@ -215,10 +237,10 @@ export default function DashboardPage() {
             <Divider style={{ margin: "12px 0" }} />
             <Row gutter={8}>
               <Col span={12}>
-                <Text type="success">✓ {statistics.successfulLogins}</Text>
+                <Text type="success">{statistics.successfulLogins}</Text>
               </Col>
               <Col span={12}>
-                <Text type="danger">✗ {statistics.failedLogins}</Text>
+                <Text type="danger">{statistics.failedLogins}</Text>
               </Col>
             </Row>
           </Card>
@@ -329,4 +351,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

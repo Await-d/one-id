@@ -37,6 +37,9 @@ export default function AuditLogsPage() {
     queryFn: () => auditLogsApi.getCategories(),
   });
 
+  // Safe arrays for data
+  const safeCategories = Array.isArray(categories) ? categories : [];
+
   const columns = [
     {
       title: t('auditLogs.timestamp'),
@@ -148,7 +151,7 @@ export default function AuditLogsPage() {
                 onChange={setCategory}
                 allowClear
               >
-                {categories?.map((cat) => (
+                {safeCategories.map((cat) => (
                   <Option key={cat} value={cat}>
                     {cat}
                   </Option>
@@ -192,7 +195,7 @@ export default function AuditLogsPage() {
           {/* Table */}
           <Table
             columns={columns}
-            dataSource={data?.logs || []}
+            dataSource={Array.isArray(data?.logs) ? data.logs : []}
             rowKey="id"
             loading={isLoading}
             pagination={{

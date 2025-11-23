@@ -35,6 +35,11 @@ const getApiBaseUrl = (): string => {
         return `${currentUrl.protocol}//${currentUrl.hostname}:18081`;
     }
 
+    // 如果当前是 8088 端口（Docker 部署），Admin API 在 8089 端口
+    if (currentUrl.port === "8088") {
+        return `${currentUrl.protocol}//${currentUrl.hostname}:8089`;
+    }
+
     // 如果通过域名访问（如 https://auth.awitk.cn），Admin API 通过 /api 路径访问
     // 注意：Admin Portal 在 /admin 路径，但 Admin API 在 /api 路径
     return `${window.location.origin}/api`;

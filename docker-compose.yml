@@ -74,6 +74,12 @@ services:
 
       # 应用配置
       ASPNETCORE_ENVIRONMENT: Production
+
+      # 配置热更新 (生产环境禁用轮询)
+      HotReload__PollingEnabled: "false"
+
+      # CORS 配置 (Docker 部署启用 CORS)
+      EnableCors: "true"
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
