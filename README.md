@@ -469,10 +469,8 @@ OneID 构建在以下优秀的开源项目之上：
 
 ## 📞 联系我们
 
-- **官网**: https://oneid.dev
-- **文档**: https://docs.oneid.dev
-- **GitHub**: https://github.com/your-org/OneID
-- **邮箱**: support@oneid.dev
+- **GitHub**: [https://github.com/Await-d/OneID](https://github.com/Await-d/one-id/)
+- **邮箱**: 285283010@qq.com
 
 ---
 
