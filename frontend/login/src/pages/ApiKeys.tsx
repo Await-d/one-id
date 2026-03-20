@@ -111,14 +111,13 @@ export default function ApiKeysPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        alert(data.message || t('errors.serverError'));
+        showToast(data.message || t('errors.serverError'), 'error');
         return;
       }
 
       fetchApiKeys();
-    } catch (error) {
-      console.error('Error revoking API key:', error);
-      alert(t('errors.networkError'));
+    } catch {
+      showToast(t('errors.networkError'), 'error');
     }
   };
 
@@ -185,7 +184,7 @@ export default function ApiKeysPage() {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(createdKey);
-                      alert(t('apiKeys.copied'));
+                      showToast(t('apiKeys.copied'), 'success');
                     }}
                     className="px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
                   >
