@@ -67,6 +67,11 @@ builder.Services.AddScoped<IUserDeviceService, UserDeviceService>();
 builder.Services.AddScoped<IUserBehaviorAnalyticsService, UserBehaviorAnalyticsService>();
 builder.Services.AddScoped<IAnomalyDetectionService, AnomalyDetectionService>();
 builder.Services.AddScoped<IWebhookService, WebhookService>();
+builder.Services.AddScoped<OneID.Shared.Infrastructure.IEmailService, OneID.Shared.Infrastructure.LoggingEmailService>();
+builder.Services.AddScoped<OneID.Shared.Infrastructure.IBulkUserOperationsService, OneID.Shared.Infrastructure.BulkUserOperationsService>();
+builder.Services.AddScoped<OneID.Shared.Infrastructure.INotificationService, OneID.Shared.Infrastructure.NotificationService>();
+builder.Services.AddScoped<OneID.Shared.Infrastructure.IRateLimitSettingsService, OneID.Shared.Infrastructure.RateLimitSettingsService>();
+builder.Services.AddScoped<OneID.Shared.Infrastructure.ILoginPolicyService, OneID.Shared.Infrastructure.LoginPolicyService>();
 
 // 添加 HttpClient（WebhookService 需要）
 builder.Services.AddHttpClient();

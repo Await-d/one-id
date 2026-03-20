@@ -41,6 +41,10 @@ jobs:
           pnpm run lint || true
           pnpm run type-check || true
 
+      - name: Test Login SPA
+        working-directory: frontend/login
+        run: pnpm run test
+
       - name: Build Login SPA
         working-directory: frontend/login
         run: pnpm run build
@@ -54,6 +58,10 @@ jobs:
         run: |
           pnpm run lint || true
           pnpm run type-check || true
+
+      - name: Test Admin Portal
+        working-directory: frontend/admin
+        run: pnpm run test
 
       - name: Build Admin Portal
         working-directory: frontend/admin

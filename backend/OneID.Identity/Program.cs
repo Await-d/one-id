@@ -369,3 +369,5 @@ static void ApplyCorsPolicy(CorsPolicyBuilder policy, CorsSettingsOptions option
 
     policy.AllowAnyHeader().AllowAnyMethod();
 }
+
+public partial class Program;

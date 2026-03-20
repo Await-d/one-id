@@ -25,7 +25,6 @@ export function LogoutCallbackPage() {
 
                 // 处理登出回调
                 await userManager.signoutRedirectCallback();
-                console.log("Logout callback processed successfully");
 
                 // 清除所有本地用户数据
                 await userManager.removeUser();

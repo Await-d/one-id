@@ -25,6 +25,10 @@ public static class ServiceProviderExtensions
             // 表已存在，跳过迁移错误
             Console.WriteLine($"⚠️ 数据库表已存在，跳过迁移: {ex.MessageText}");
         }
+        catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.Message.Contains("already exists"))
+        {
+            // SQLite in-memory: tables already exist from EnsureCreated — skip
+        }
 
         // 运行数据库种子
         var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();

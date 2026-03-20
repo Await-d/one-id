@@ -18,5 +18,10 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: true,
     },
+    test: {
+      environment: "jsdom",
+      setupFiles: ["./src/test/setup.ts"],
+      globals: true,
+    },
   };
 });

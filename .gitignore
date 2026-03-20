@@ -88,3 +88,4 @@ docker-compose.test.yml
 *.so
 *.dylib
 Dockerfile.backup
+shared-keys/

@@ -65,9 +65,29 @@ jobs:
 
           echo "should_release=true" >> $GITHUB_OUTPUT
 
+  run-tests:
+    name: Run Backend Tests
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore backend/OneID.sln
+
+      - name: Run Tests
+        run: dotnet test backend/OneID.sln --no-restore --configuration Release --logger "console;verbosity=normal"
+
   build-and-release:
     name: Build and Release
-    needs: check-version
+    needs: [check-version, run-tests]
     if: needs.check-version.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:

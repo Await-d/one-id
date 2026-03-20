@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
+import type { UserConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 
 export default defineConfig(({ mode }) => {
@@ -19,5 +20,10 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: true,
     },
-  };
+    test: {
+      environment: "jsdom",
+      setupFiles: ["./src/test/setup.ts"],
+      globals: true,
+    },
+  } as UserConfig;
 });

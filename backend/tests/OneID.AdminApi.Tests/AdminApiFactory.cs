@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,19 +22,26 @@ public sealed class AdminApiFactory : WebApplicationFactory<Program>, IDisposabl
     {
         _connection.Open();
 
+        var tempKeysPath = Path.Combine(Path.GetTempPath(), "oneid-test-keys-" + Guid.NewGuid());
+        builder.UseSetting("Database:Provider", "Sqlite");
+        builder.UseSetting("ConnectionStrings:DefaultConnection", "DataSource=:memory:");
+        builder.UseSetting("DataProtection:KeysPath", tempKeysPath);
+
         builder.ConfigureServices(services =>
         {
-            // 替换数据库上下文为单例 SQLite 内存库
-            var descriptors = services
-                .Where(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>) || d.ServiceType == typeof(AppDbContext))
+            // Remove ALL DbContext and DbContextOptions registrations so the Npgsql
+            // provider (registered via AddConfiguredDatabase) is fully replaced.
+            var dbTypes = services
+                .Where(d =>
+                    d.ServiceType == typeof(AppDbContext) ||
+                    d.ServiceType == typeof(DbContextOptions<AppDbContext>) ||
+                    d.ServiceType == typeof(DbContextOptions) ||
+                    (d.ServiceType.IsGenericType &&
+                     d.ServiceType.GetGenericArguments().Any(a => a == typeof(AppDbContext))))
                 .ToList();
+            foreach (var d in dbTypes) services.Remove(d);
 
-            foreach (var descriptor in descriptors)
-            {
-                services.Remove(descriptor);
-            }
-
-            services.AddDbContext<AppDbContext>(options =>
+            services.AddDbContext<AppDbContext>((_, options) =>
             {
                 options.UseSqlite(_connection);
                 options.UseOpenIddict();
@@ -79,7 +87,7 @@ public sealed class AdminApiFactory : WebApplicationFactory<Program>, IDisposabl
                 {
                     ClientId = "spa.portal",
                     DisplayName = "Portal Client",
-                    Type = OpenIddictConstants.ClientTypes.Public
+                    ClientType = OpenIddictConstants.ClientTypes.Public
                 };
 
                 descriptor.RedirectUris.Add(new Uri("https://spa.local/callback"));
@@ -88,7 +96,7 @@ public sealed class AdminApiFactory : WebApplicationFactory<Program>, IDisposabl
                 descriptor.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
                 descriptor.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
                 descriptor.Permissions.Add(OpenIddictConstants.Permissions.ResponseTypes.Code);
-                descriptor.Permissions.Add(OpenIddictConstants.Permissions.ScopeOpenId);
+                descriptor.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.Scope + "openid");
 
                 applicationManager.CreateAsync(descriptor).GetAwaiter().GetResult();
             }
@@ -97,6 +105,12 @@ public sealed class AdminApiFactory : WebApplicationFactory<Program>, IDisposabl
         builder.ConfigureTestServices(services =>
         {
             services.Configure<JwtBearerOptions>(options => { });
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = "Test";
+                    options.DefaultChallengeScheme = "Test";
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Bearer", _ => { });
         });
     }
 

@@ -28,7 +28,6 @@ export function ProtectedLayout() {
         // 检查是否正在登出过程中
         const isLoggingOut = sessionStorage.getItem("isLoggingOut") === "true";
         if (isLoggingOut) {
-            console.log("Logout in progress, skipping auto-login");
             return;
         }
 

@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
+const showToast = (msg: string, type: 'success' | 'error') => {
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = `position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);background:${type === 'success' ? '#52c41a' : '#ff4d4f'}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+};
+
 interface ApiKey {
   id: string;
   name: string;
@@ -56,7 +64,7 @@ export default function ApiKeysPage() {
 
   const createApiKey = async () => {
     if (!newKeyName.trim()) {
-      alert(t('apiKeys.keyNamePlaceholder'));
+      showToast(t('apiKeys.keyNameRequired') || t('apiKeys.keyNamePlaceholder'), 'error');
       return;
     }
 
@@ -73,7 +81,7 @@ export default function ApiKeysPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        alert(data.message || t('errors.serverError'));
+        showToast(data.message || t('errors.serverError'), 'error');
         return;
       }
 
@@ -83,9 +91,8 @@ export default function ApiKeysPage() {
       setNewKeyExpiration('');
       setShowCreateModal(false);
       fetchApiKeys();
-    } catch (error) {
-      console.error('Error creating API key:', error);
-      alert(t('errors.networkError'));
+    } catch {
+      showToast(t('errors.networkError'), 'error');
     }
   };
 

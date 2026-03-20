@@ -66,9 +66,8 @@ export default function WebhooksPage() {
     try {
       const data = await webhooksApi.getAllWebhooks();
       setWebhooks(data);
-    } catch (error) {
+    } catch {
       message.error(t('webhooks.loadFailed'));
-      console.error("Failed to load webhooks:", error);
     } finally {
       setLoading(false);
     }
@@ -78,8 +77,8 @@ export default function WebhooksPage() {
     try {
       const data = await webhooksApi.getEventTypes();
       setEventTypes(data);
-    } catch (error) {
-      console.error("Failed to load event types:", error);
+    } catch {
+      message.error(t('webhooks.loadEventTypesFailed') || t('common.loadFailed'));
     }
   };
 
@@ -106,9 +105,8 @@ export default function WebhooksPage() {
       await webhooksApi.deleteWebhook(id);
       message.success(t('webhooks.deleteSuccess'));
       loadWebhooks();
-    } catch (error) {
+    } catch {
       message.error(t('webhooks.deleteFailed'));
-      console.error("Failed to delete webhook:", error);
     }
   };
 
@@ -192,7 +190,6 @@ export default function WebhooksPage() {
       loadWebhooks();
     } catch (error) {
       message.error(editingWebhook ? t('webhooks.updateFailed') : t('webhooks.createFailed'));
-      console.error("Failed to save webhook:", error);
     }
   };
 
@@ -476,9 +473,8 @@ function WebhookLogsViewer({ webhookId }: WebhookLogsViewerProps) {
     try {
       const data = await webhooksApi.getWebhookLogs(webhookId);
       setLogs(data);
-    } catch (error) {
+    } catch {
       message.error(t('webhooks.loadLogsFailed'));
-      console.error("Failed to load logs:", error);
     } finally {
       setLoading(false);
     }
@@ -489,9 +485,8 @@ function WebhookLogsViewer({ webhookId }: WebhookLogsViewerProps) {
       await webhooksApi.retryWebhookLog(logId);
       message.success(t('webhooks.retrySuccess'));
       setTimeout(loadLogs, 1000);
-    } catch (error) {
+    } catch {
       message.error(t('webhooks.retryFailed'));
-      console.error("Failed to retry:", error);
     }
   };
 

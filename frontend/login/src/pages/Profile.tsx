@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
+const showToast = (msg: string, type: 'success' | 'error') => {
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = `position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);background:${type === 'success' ? '#52c41a' : '#ff4d4f'}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+};
+
 interface ExternalLogin {
   loginProvider: string;
   providerKey: string;
@@ -113,14 +121,13 @@ export function ProfilePage() {
       });
 
       if (response.ok) {
-        alert(t('profile.unlinkSuccess'));
+        showToast(t('profile.unlinkSuccess'), 'success');
         loadExternalLogins();
       } else {
-        alert(t('profile.unlinkFailed'));
+        showToast(t('profile.unlinkFailed'), 'error');
       }
-    } catch (error) {
-      console.error("Failed to unlink account", error);
-      alert(t('profile.unlinkFailed'));
+    } catch {
+      showToast(t('profile.unlinkFailed'), 'error');
     }
   };
 

@@ -45,12 +45,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(null);
         };
 
-        const handleAccessTokenExpiring = () => {
-            console.log("Access token expiring, attempting silent renew...");
+        const handleAccessTokenExpiring = async () => {
+            try {
+                await userManager.signinSilent();
+            } catch {
+                await userManager.signinRedirect();
+            }
         };
 
         const handleAccessTokenExpired = () => {
-            console.log("Access token expired");
             setUser(null);
         };
 
