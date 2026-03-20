@@ -106,8 +106,9 @@ public class EmailConfigurationControllerTests : IClassFixture<AdminApiFactory>
         };
         
         var createResponse = await _client.PostAsJsonAsync("/api/emailconfiguration", createRequest);
-        var createResult = await createResponse.Content.ReadFromJsonAsync<dynamic>();
-        var id = (int)createResult!.id;
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        var id = createResult.GetProperty("id").GetInt32();
 
         var updateRequest = new
         {
@@ -137,8 +138,9 @@ public class EmailConfigurationControllerTests : IClassFixture<AdminApiFactory>
         };
         
         var createResponse = await _client.PostAsJsonAsync("/api/emailconfiguration", createRequest);
-        var createResult = await createResponse.Content.ReadFromJsonAsync<dynamic>();
-        var id = (int)createResult!.id;
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        var id = createResult.GetProperty("id").GetInt32();
 
         // Act
         var response = await _client.DeleteAsync($"/api/emailconfiguration/{id}");
@@ -193,16 +195,17 @@ public class EmailConfigurationControllerTests : IClassFixture<AdminApiFactory>
         };
         
         var createResponse = await _client.PostAsJsonAsync("/api/emailconfiguration", createRequest);
-        var createResult = await createResponse.Content.ReadFromJsonAsync<dynamic>();
-        var id = (int)createResult!.id;
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        var id = createResult.GetProperty("id").GetInt32();
 
         // Act - Get the config
         var getResponse = await _client.GetAsync($"/api/emailconfiguration/{id}");
-        var config = await getResponse.Content.ReadFromJsonAsync<dynamic>();
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var config = await getResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
 
         // Assert - Password should not be in response, only hasSmtpPassword flag
-        Assert.NotNull(config);
-        Assert.True((bool)config.hasSmtpPassword);
+        Assert.True(config.GetProperty("hasSmtpPassword").GetBoolean());
     }
 }
 
